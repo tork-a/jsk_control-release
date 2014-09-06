@@ -1,0 +1,53 @@
+From 7bb9371e136a19664ef86dd573be47fe10ac7760 Mon Sep 17 00:00:00 2001
+From: Kei Okada <k-okada@jsk.t.u-tokyo.ac.jp>
+Date: Sat, 6 Sep 2014 10:29:07 +0900
+Subject: [PATCH] disable view_controller_msgs for groovy
+
+---
+ catkin.cmake |    4 ++--
+ package.xml  |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/catkin.cmake b/catkin.cmake
+index 7dee521..78f131e 100644
+--- a/catkin.cmake
++++ b/catkin.cmake
+@@ -1,11 +1,11 @@
+ cmake_minimum_required(VERSION 2.8.3)
+ project(jsk_teleop_joy)
+ 
+-find_package(catkin REQUIRED COMPONENTS ps3joy tf view_controller_msgs interactive_markers visualization_msgs jsk_footstep_msgs jsk_rviz_plugins) # pr2_controllers_msgs robot_monitor
++find_package(catkin REQUIRED COMPONENTS ps3joy tf interactive_markers visualization_msgs jsk_footstep_msgs jsk_rviz_plugins) # pr2_controllers_msgs robot_monitor
+ catkin_python_setup()
+ 
+ catkin_package(
+-  CATKIN_DEPENDS ps3joy tf view_controller_msgs interactive_markers visualization_msgs jsk_footstep_msgs jsk_rviz_plugins
++  CATKIN_DEPENDS ps3joy tf interactive_markers visualization_msgs jsk_footstep_msgs jsk_rviz_plugins
+   
+   )
+ 
+diff --git a/package.xml b/package.xml
+index 2c4ae38..bc6d54c 100644
+--- a/package.xml
++++ b/package.xml
+@@ -11,7 +11,7 @@
+   <buildtool_depend>catkin</buildtool_depend>
+   <build_depend>ps3joy</build_depend>
+   <build_depend>tf</build_depend>
+-  <build_depend>view_controller_msgs</build_depend>
++  <!-- <build_depend>view_controller_msgs</build_depend> -->
+   <build_depend>interactive_markers</build_depend>
+   <build_depend>visualization_msgs</build_depend>
+   <build_depend>jsk_footstep_msgs</build_depend>
+@@ -21,7 +21,7 @@
+   <build_depend>jsk_rviz_plugins</build_depend>
+   <run_depend>ps3joy</run_depend>
+   <run_depend>tf</run_depend>
+-  <run_depend>view_controller_msgs</run_depend>
++  <!-- <run_depend>view_controller_msgs</run_depend> -->
+   <run_depend>interactive_markers</run_depend>
+   <run_depend>visualization_msgs</run_depend>
+   <run_depend>jsk_footstep_msgs</run_depend>
+-- 
+1.7.9.5
+
