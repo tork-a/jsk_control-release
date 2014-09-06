@@ -1,4 +1,4 @@
-From 7bb9371e136a19664ef86dd573be47fe10ac7760 Mon Sep 17 00:00:00 2001
+From 1d6561d837e90e486b53dc938ed8415df9aff1d2 Mon Sep 17 00:00:00 2001
 From: Kei Okada <k-okada@jsk.t.u-tokyo.ac.jp>
 Date: Sat, 6 Sep 2014 10:29:07 +0900
 Subject: [PATCH] disable view_controller_msgs for groovy
