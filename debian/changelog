@@ -1,9 +1,0 @@
-ros-groovy-joy-mouse (0.1.1-1oneiric) oneiric; urgency=high
-
-  * add script to control head via trackball
-  * add new package: joy_mouse to publish Joy message from mouse input
-  * Contributors: Ryohei Ueda
-
- -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Wed, 03 Sep 2014 15:00:00 -0000
-
-
