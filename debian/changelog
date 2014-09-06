@@ -1,8 +1,0 @@
-ros-groovy-eus-qpoases (0.1.1-0precise) precise; urgency=high
-
-  * Add euslisp package for qpOASES, which is a qp solver
-  * Contributors: Shunichi Nozawa
-
- -- Shunichi Nozawa <nozawa@jsk.t.u-tokyo.ac.jp>  Wed, 03 Sep 2014 15:00:00 -0000
-
-
