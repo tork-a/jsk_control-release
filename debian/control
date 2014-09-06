@@ -1,0 +1,12 @@
+Source: ros-groovy-jsk-teleop-joy
+Section: misc
+Priority: extra
+Maintainer: Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 7.0.0), ros-groovy-catkin, ros-groovy-diagnostic-msgs, ros-groovy-diagnostic-updater, ros-groovy-interactive-markers, ros-groovy-joy-mouse, ros-groovy-jsk-footstep-msgs, ros-groovy-jsk-interactive-marker, ros-groovy-jsk-rviz-plugins, ros-groovy-ps3joy, ros-groovy-tf, ros-groovy-visualization-msgs
+Homepage: http://ros.org/wiki/jsk_teleop_joy
+Standards-Version: 3.9.2
+
+Package: ros-groovy-jsk-teleop-joy
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-groovy-diagnostic-msgs, ros-groovy-diagnostic-updater, ros-groovy-image-view2, ros-groovy-interactive-markers, ros-groovy-joy-mouse, ros-groovy-jsk-footstep-msgs, ros-groovy-jsk-interactive-marker, ros-groovy-jsk-rviz-plugins, ros-groovy-ps3joy, ros-groovy-tf, ros-groovy-visualization-msgs
+Description: jsk_teleop_joy
