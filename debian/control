@@ -1,0 +1,12 @@
+Source: ros-groovy-jsk-footstep-planner
+Section: misc
+Priority: extra
+Maintainer: Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), ros-groovy-catkin, ros-groovy-jsk-footstep-msgs, ros-groovy-jsk-pcl-ros, ros-groovy-roseus
+Homepage: http://ros.org/wiki/jsk_footstep_planner
+Standards-Version: 3.9.2
+
+Package: ros-groovy-jsk-footstep-planner
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-groovy-jsk-footstep-msgs, ros-groovy-jsk-pcl-ros, ros-groovy-roseus
+Description: jsk_footstep_planner
