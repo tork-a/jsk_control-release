@@ -1,0 +1,12 @@
+Source: ros-groovy-eus-qpoases
+Section: misc
+Priority: extra
+Maintainer: Shunichi Nozawa <nozawa@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 7.0.0), ros-groovy-catkin, ros-groovy-euslisp, ros-groovy-mk
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-groovy-eus-qpoases
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, 
+Description: eus_qpoases
