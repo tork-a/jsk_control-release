@@ -2,6 +2,17 @@
 Changelog for package jsk_ik_server
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.3 (2014-10-10)
+------------------
+* add ik-server wait function, in travis, ik-server is slow to start
+* install euslisp in share directory
+* change ik-server files all exectable
+* add :ik-server-name args, smaple robot has name with - charactre
+* forbit to use copy-object of link cascoords object
+
+0.1.2 (2014-09-08)
+------------------
+
 0.1.1 (2014-09-04)
 ------------------
 * use singleton class to maintain view point of rviz to have persistency
