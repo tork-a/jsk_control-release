@@ -2,6 +2,12 @@
 Changelog for package jsk_footstep_planner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.3 (2014-10-10)
+------------------
+
+0.1.2 (2014-09-08)
+------------------
+
 0.1.1 (2014-09-04)
 ------------------
 * use lock/unlock service of environment server to lock/unlock the environment during planning
