@@ -2,6 +2,14 @@
 Changelog for package eus_nlopt
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.3 (2014-10-10)
+------------------
+* Use deb files to install jsk programs
+* Fix path to find nlopt headers and libraries
+
+0.1.2 (2014-09-08)
+------------------
+
 0.1.1 (2014-09-04)
 ------------------
 * catkinize, add package.xml and catkin.cmake, use ROS_BUILD flag, and fix lib loader to use LD_LIBRARY_PATH
