@@ -2,6 +2,15 @@
 Changelog for package eus_qp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.3 (2014-10-10)
+------------------
+
+0.1.2 (2014-09-08)
+------------------
+* eigen is no longer ros package
+* add catkin_package()
+* Contributors: Kei Okada
+
 0.1.1 (2014-09-04)
 ------------------
 * use find_package(catkin COMPONENTS cmake_modules)
