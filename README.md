@@ -1,3 +1,30 @@
+## jsk_control (hydro) - 0.1.3-1
+
+The packages in the `jsk_control` repository were released into the `hydro` distro by running `./send_to_bloom.py jsk-ros-pkg jsk_control` on `Sat, 11 Oct 2014 05:54:16 -0000`
+
+These packages were released:
+- `eus_nlopt`
+- `eus_qp`
+- `eus_qpoases`
+- `joy_mouse`
+- `jsk_footstep_controller`
+- `jsk_footstep_planner`
+- `jsk_ik_server`
+- `jsk_teleop_joy`
+
+Version of package(s) in repository `jsk_control`:
+- rosdistro version: `0.1.1-0`
+- old version: `0.1.3-0`
+- new version: `0.1.3-1`
+
+Versions of tools used:
+- bloom version: `0.5.9`
+- catkin_pkg version: `0.2.2`
+- rosdep version: `0.10.27`
+- rosdistro version: `0.3.5`
+- vcstools version: `0.1.33`
+
+
 ## jsk_control (hydro) - 0.1.3-0
 
 The packages in the `jsk_control` repository were released into the `hydro` distro by running `/usr/bin/bloom-release jsk_control --track hydro --rosdistro hydro` on `Fri, 10 Oct 2014 15:26:15 -0000`
