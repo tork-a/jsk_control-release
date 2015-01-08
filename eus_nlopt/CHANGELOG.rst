@@ -2,6 +2,12 @@
 Changelog for package eus_nlopt
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.5 (2015-01-08)
+------------------
+* remove engin from build_depend
+* remove find_package(Eigen)
+* Contributors: Kei Okada
+
 0.1.4 (2014-10-21)
 ------------------
 * add eigen
