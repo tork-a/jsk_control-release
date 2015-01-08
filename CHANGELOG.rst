@@ -2,6 +2,28 @@
 Changelog for package jsk_teleop_joy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.5 (2015-01-08)
+------------------
+* [joy_mouse] Use name of kensington mouse and remove dev file
+  specification.
+  [jsk_teleop_joy] Remove DEV argument
+* add script to publish pose stamped with spacenav
+* Fix poping-up cancel window by broadcasting canceled information
+* add api to change successor
+* Add text publishing when checking breakpoint
+* Publish usage of footstep planner joy
+* disable/enable head control with trackball buttons, move head joint continuously.
+* Contributors: Masaki Murooka, Ryohei Ueda, Yusuke Furuta
+
+0.1.4 (2014-10-21)
+------------------
+* Merge pull request #112 from mmurooka/overwrite-write-command-in-midi-player
+  Overwrite writing command in midi_config_player.py
+* overwrite writing command in midi_config_player.py
+* add pr2_relay.launch
+* publish joy topic only when midi state is changed.
+* add feedback config to b-control.yaml
+
 0.1.3 (2014-10-10)
 ------------------
 * add b_control_status.py
