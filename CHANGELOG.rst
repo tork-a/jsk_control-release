@@ -2,6 +2,16 @@
 Changelog for package eus_qpoases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.5 (2015-01-08)
+------------------
+* Get qpOASES status from argument
+* Update patch for qpoases shared object (https://github.com/jsk-ros-pkg/jsk_control/issues/180)
+* Contributors: Shunichi Nozawa
+
+0.1.4 (2014-10-21)
+------------------
+* trust server ssl
+
 0.1.3 (2014-10-10)
 ------------------
 
