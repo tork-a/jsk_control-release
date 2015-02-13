@@ -1,3 +1,33 @@
+## jsk_control (indigo) - 0.1.5-0
+
+The packages in the `jsk_control` repository were released into the `indigo` distro by running `/usr/bin/bloom-release jsk_control --track indigo --rosdistro indigo --new-track` on `Fri, 13 Feb 2015 14:13:31 -0000`
+
+These packages were released:
+- `eus_nlopt`
+- `eus_qp`
+- `eus_qpoases`
+- `joy_mouse`
+- `jsk_calibration`
+- `jsk_footstep_controller`
+- `jsk_footstep_planner`
+- `jsk_ik_server`
+- `jsk_teleop_joy`
+
+Version of package(s) in repository `jsk_control`:
+- upstream repository: https://github.com/jsk-ros-pkg/jsk_control.git
+- release repository: unknown
+- rosdistro version: `null`
+- old version: `null`
+- new version: `0.1.5-0`
+
+Versions of tools used:
+- bloom version: `0.5.18`
+- catkin_pkg version: `0.2.6`
+- rosdep version: `0.11.1`
+- rosdistro version: `0.4.0`
+- vcstools version: `0.1.36`
+
+
 ## jsk_control (hydro) - 0.1.5-0
 
 The packages in the `jsk_control` repository were released into the `hydro` distro by running `./send_to_bloom.py jsk-ros-pkg jsk_control` on `Thu, 08 Jan 2015 04:58:08 -0000`
