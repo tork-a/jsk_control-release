@@ -39,6 +39,7 @@
 #include <tf_conversions/tf_eigen.h>
 #include <jsk_pcl_ros/pcl_conversion_util.h>
 #include <tf_conversions/tf_eigen.h>
+#include <jsk_pcl_ros/pcl_conversion_util.h>
 
 namespace jsk_footstep_controller
 {
@@ -50,7 +51,9 @@ namespace jsk_footstep_controller
     lforce_list_.resize(0);
     rforce_list_.resize(0);
     tf_listener_.reset(new tf::TransformListener());
+    odom_pose_ = Eigen::Affine3d::Identity();
     ground_transform_.setRotation(tf::Quaternion(0, 0, 0, 1));
+    root_link_pose_.setIdentity();
     midcoords_.setRotation(tf::Quaternion(0, 0, 0, 1));
     diagnostic_updater_->setHardwareID("none");
     diagnostic_updater_->add("Support Leg Status", this, 
@@ -62,16 +65,27 @@ namespace jsk_footstep_controller
               std::string("odom_on_ground"));
     pnh.param("parent_frame_id", parent_frame_id_, std::string("odom"));
     pnh.param("midcoords_frame_id", midcoords_frame_id_, std::string("ground"));
+    pnh.param("root_frame_id", root_frame_id_, std::string("BODY"));
+    pnh.param("odom_root_frame_id", odom_root_frame_id_, std::string("odom_root"));
     pnh.param("lfoot_frame_id", lfoot_frame_id_,
               std::string("lleg_end_coords"));
     pnh.param("rfoot_frame_id", rfoot_frame_id_,
               std::string("rleg_end_coords"));
+    pnh.param("lfoot_sensor_frame", lfoot_sensor_frame_, std::string("lleg_end_coords"));
+    pnh.param("rfoot_sensor_frame", rfoot_sensor_frame_, std::string("rleg_end_coords"));
+    // pnh.param("lfoot_sensor_frame", lfoot_sensor_frame_, std::string("lfsensor"));
+    // pnh.param("rfoot_sensor_frame", rfoot_sensor_frame_, std::string("rfsensor"));
     pnh.param("force_threshold", force_thr_, 100.0);
+    support_status_ = AIR;
     pub_state_ = pnh.advertise<std_msgs::String>("state", 1);
     pub_contact_state_ = pnh.advertise<jsk_footstep_controller::GroundContactState>("contact_state", 1);
     before_on_the_air_ = true;
+    odom_sub_ = pnh.subscribe<nav_msgs::Odometry>("/odom", 1, 
+                                                 &Footcoords::odomCallback, this);
     sub_lfoot_force_.subscribe(nh, "lfsensor", 1);
     sub_rfoot_force_.subscribe(nh, "rfsensor", 1);
+    periodic_update_timer_ = pnh.createTimer(ros::Duration(1.0 / 25),
+                                             boost::bind(&Footcoords::periodicTimerCallback, this, _1));
     sync_ = boost::make_shared<message_filters::Synchronizer<SyncPolicy> >(100);
     sync_->connectInput(sub_lfoot_force_, sub_rfoot_force_);
     sync_->registerCallback(boost::bind(&Footcoords::filter, this, _1, _2));
@@ -129,63 +143,146 @@ namespace jsk_footstep_controller
     return true;
   }
 
+  bool Footcoords::resolveForceTf(const geometry_msgs::WrenchStamped::ConstPtr& lfoot,
+                                  const geometry_msgs::WrenchStamped::ConstPtr& rfoot,
+                                  tf::Vector3& lfoot_force,
+                                  tf::Vector3& rfoot_force)
+  {
+    try {
+      if (!waitForEndEffectorTrasnformation(lfoot->header.stamp)) {
+        ROS_ERROR("[Footcoords::resolveForceTf] failed to lookup transformation for sensor value");
+        return false;
+      }
+      tf::StampedTransform lfoot_transform, rfoot_transform;
+      tf_listener_->lookupTransform(
+        lfoot->header.frame_id, lfoot_sensor_frame_, lfoot->header.stamp, lfoot_transform);
+      tf_listener_->lookupTransform(
+        rfoot->header.frame_id, rfoot_sensor_frame_, rfoot->header.stamp, rfoot_transform);
+      // cancel translation
+      lfoot_transform.setOrigin(tf::Vector3(0, 0, 0));
+      rfoot_transform.setOrigin(tf::Vector3(0, 0, 0));
+
+      tf::Vector3 lfoot_local, rfoot_local;
+      tf::vector3MsgToTF(lfoot->wrench.force, lfoot_local);
+      tf::vector3MsgToTF(rfoot->wrench.force, rfoot_local);
+      lfoot_force = lfoot_transform * lfoot_local;
+      rfoot_force = rfoot_transform * rfoot_local;
+      // lfoot_force = lfoot_rotation * lfoot_local;
+      // rfoot_force = rfoot_rotation * rfoot_local;
+      return true;
+    }
+    catch (tf2::ConnectivityException &e) {
+      ROS_ERROR("[Footcoords::resolveForceTf] transform error: %s", e.what());
+      return false;
+    }
+    catch (tf2::InvalidArgumentException &e) {
+      ROS_ERROR("[Footcoords::resolveForceTf] transform error: %s", e.what());
+      return false;
+    }
+    catch (tf2::ExtrapolationException &e) {
+      ROS_ERROR("[Footcoords::resolveForceTf] transform error: %s", e.what());
+      return false;
+    }
+    catch (tf2::LookupException &e) {
+      ROS_ERROR("[Footcoords::resolveForceTf] transform error: %s", e.what());
+      return false;
+    }
+  }
+
+  void Footcoords::periodicTimerCallback(const ros::TimerEvent& event)
+  {
+    boost::mutex::scoped_lock lock(mutex_);
+    bool success_to_update = computeMidCoords(event.current_real);
+    if (support_status_ == AIR || support_status_ == BOTH_GROUND) {
+      publishState("ground");
+    }
+    else {
+      if (support_status_ == LLEG_GROUND) {
+        publishState("lfoot");
+      }
+      else if (support_status_ == RLEG_GROUND) {
+        publishState("rfoot");
+      }
+    }
+    //if (success_to_update) {
+    tf::StampedTransform root_transform;
+    try {
+      // tf_listener_->lookupTransform(parent_frame_id_, root_frame_id_, event.current_real, root_transform);
+      // root_link_pose_.setOrigin(root_transform.getOrigin());
+      // root_link_pose_.setRotation(root_transform.getRotation());
+    }
+    catch (tf2::ConnectivityException &e) {
+      ROS_ERROR("[Footcoords::resolveForceTf] transform error: %s", e.what());
+    }
+    catch (tf2::InvalidArgumentException &e) {
+      ROS_ERROR("[Footcoords::resolveForceTf] transform error: %s", e.what());
+    }
+    catch (tf2::ExtrapolationException &e) {
+      ROS_ERROR("[Footcoords::resolveForceTf] transform error: %s", e.what());
+    }
+    catch (tf2::LookupException &e) {
+      ROS_ERROR("[Footcoords::resolveForceTf] transform error: %s", e.what());
+    }
+      //}
+
+      // midcoords is a center coordinates of two feet
+      // compute root_link -> midcoords
+      // root_link_pose_ := odom -> root_link
+      // midcoords_ := odom -> midcoords
+      // root_link_pose_ * T = midcoords_
+      // T = root_link_pose_^-1 * midcoords_
+    //ground_transform_ = root_link_pose_.inverse() * midcoords_;
+    ground_transform_ = midcoords_;
+      publishTF(event.current_real);
+      diagnostic_updater_->update();
+      publishContactState(event.current_real);
+  }
+
   void Footcoords::filter(const geometry_msgs::WrenchStamped::ConstPtr& lfoot,
                           const geometry_msgs::WrenchStamped::ConstPtr& rfoot)
   {
-    bool success_to_update = false;
+    boost::mutex::scoped_lock lock(mutex_);
     // lowpass filter
-    double lfoot_force = applyLowPassFilter(lfoot->wrench.force.z, prev_lforce_);
-    double rfoot_force = applyLowPassFilter(rfoot->wrench.force.z, prev_rforce_);
+    tf::Vector3 lfoot_force_vector, rfoot_force_vector;
+    if (!resolveForceTf(lfoot, rfoot, lfoot_force_vector, rfoot_force_vector)) {
+      ROS_ERROR("[Footcoords::filter] failed to resolve tf of force sensor");
+      return;
+    }
+    // resolve tf
+    double lfoot_force = applyLowPassFilter(lfoot_force_vector[2], prev_lforce_);
+    double rfoot_force = applyLowPassFilter(rfoot_force_vector[2], prev_rforce_);
     lforce_list_.push_back(ValueStamped::Ptr(new ValueStamped(lfoot->header, lfoot_force)));
     rforce_list_.push_back(ValueStamped::Ptr(new ValueStamped(rfoot->header, rfoot_force)));
-    // ROS_INFO("lforce_list: %lu", lforce_list_.size());
-    // ROS_INFO("rforce_list: %lu", rforce_list_.size());
-    // ROS_INFO("%f -> %f", lfoot->wrench.force.z, lfoot_force);
-    // ROS_INFO("%f -> %f", rfoot->wrench.force.z, rfoot_force);
-    // update prev value
+
     prev_lforce_ = lfoot_force;
     prev_rforce_ = rfoot_force;
 
     if (allValueLargerThan(lforce_list_, force_thr_) &&
         allValueLargerThan(rforce_list_, force_thr_)) {
       // on ground
+      if (support_status_ != BOTH_GROUND) {
+        // save transformation from midcoords to odom_on_ground
+        locked_midcoords_to_odom_on_ground_ = midcoords_.inverse() * ground_transform_;
+      }
       support_status_ = BOTH_GROUND;
-      publishState("ground");
-      success_to_update = computeMidCoords(lfoot->header.stamp);
-      updateGroundTF();
     }
-    else if (allValueSmallerThan(lforce_list_, force_thr_) && 
+    else if (allValueSmallerThan(lforce_list_, force_thr_) &&
              allValueSmallerThan(rforce_list_, force_thr_)) {
       before_on_the_air_ = true;
       support_status_ = AIR;
-      publishState("air");
-      success_to_update = computeMidCoords(lfoot->header.stamp);
-      // do not update odom_on_ground
     }
     else if (allValueLargerThan(lforce_list_, force_thr_)) {
       // only left
       support_status_ = LLEG_GROUND;
-      publishState("lfoot");
-      success_to_update = computeMidCoordsFromSingleLeg(lfoot->header.stamp, true);
-      updateGroundTF();
     }
     else if (allValueLargerThan(rforce_list_, force_thr_)) {
       // only right
       support_status_ = RLEG_GROUND;
-      publishState("rfoot");
-      success_to_update = computeMidCoordsFromSingleLeg(lfoot->header.stamp, false);
-      updateGroundTF();
     }
     else {
       // unstable
       support_status_ = UNSTABLE;
       publishState("unstable");
-    }
-    
-    if (success_to_update) {
-      publishTF(lfoot->header.stamp);
-      diagnostic_updater_->update();
-      publishContactState(lfoot->header.stamp);
     }
     lforce_list_.removeBefore(lfoot->header.stamp - ros::Duration(sampling_time_));
     rforce_list_.removeBefore(rfoot->header.stamp - ros::Duration(sampling_time_));
@@ -233,61 +330,72 @@ namespace jsk_footstep_controller
     }
     catch (tf2::ConnectivityException &e)
     {
-      ROS_ERROR("transform error: %s", e.what());
+      ROS_ERROR("[Footcoords::publishContactState] transform error: %s", e.what());
     }
     catch (tf2::InvalidArgumentException &e)
     {
-      ROS_ERROR("transform error: %s", e.what());
+      ROS_ERROR("[Footcoords::publishContactState] transform error: %s", e.what());
     }
     catch (tf2::ExtrapolationException &e)
     {
-      ROS_ERROR("transform error: %s", e.what());
+      ROS_ERROR("[Footcoords::publishContactState] transform error: %s", e.what());
     }
+    catch (tf2::LookupException &e)
+    {
+      ROS_ERROR("[Footcoords::publishContactState] transform error: %s", e.what());
+    }
+
   }
 
   bool Footcoords::computeMidCoordsFromSingleLeg(const ros::Time& stamp,
                                                  bool use_left_leg)
   {
     if (!waitForEndEffectorTrasnformation(stamp)) {
-      ROS_ERROR("Failed to lookup endeffector transformation");
+      ROS_ERROR("[Footcoords::computeMidCoordsFromSingleLeg] Failed to lookup endeffector transformation");
       return false;
     }
     else {
-      try 
+      try
       {
         tf::StampedTransform foot_transform; // parent -> foot
         if (use_left_leg) {     // left on the ground
           tf_listener_->lookupTransform(
-            parent_frame_id_, lfoot_frame_id_, stamp, foot_transform);
+            root_frame_id_, lfoot_frame_id_, stamp, foot_transform);
         }
         else {                  // right on the ground
           tf_listener_->lookupTransform(
-            parent_frame_id_, rfoot_frame_id_, stamp, foot_transform);
+            root_frame_id_, rfoot_frame_id_, stamp, foot_transform);
         }
-        midcoords_ = foot_transform;
+        midcoords_ = foot_transform.inverse();
         return true;
       }
       catch (tf2::ConnectivityException &e)
       {
-        ROS_ERROR("transform error: %s", e.what());
+        ROS_ERROR("[Footcoords::computeMidCoordsFromSingleLeg] transform error: %s", e.what());
         return false;
       }
       catch (tf2::InvalidArgumentException &e)
       {
-        ROS_ERROR("transform error: %s", e.what());
+        ROS_ERROR("[Footcoords::computeMidCoordsFromSingleLeg] transform error: %s", e.what());
         return false;
       }
       catch (tf2::ExtrapolationException &e)
       {
-        ROS_ERROR("transform error: %s", e.what());
+        ROS_ERROR("[Footcoords::computeMidCoordsFromSingleLeg] transform error: %s", e.what());
       }
+      catch (tf2::LookupException &e)
+      {
+        ROS_ERROR("[Footcoords::computeMidCoordsFromSingleLeg] transform error: %s", e.what());
+      }
+
+
     }
   }
   
   bool Footcoords::computeMidCoords(const ros::Time& stamp)
   {
     if (!waitForEndEffectorTrasnformation(stamp)) {
-      ROS_ERROR("Failed to lookup endeffector transformation");
+      ROS_ERROR("[Footcoords::computeMidCoords] Failed to lookup endeffector transformation");
       return false;
     }
     else {
@@ -295,10 +403,10 @@ namespace jsk_footstep_controller
       {
         tf::StampedTransform lfoot_transform;
         tf_listener_->lookupTransform(
-          parent_frame_id_, lfoot_frame_id_, stamp, lfoot_transform);
+          root_frame_id_, lfoot_frame_id_, stamp, lfoot_transform);
         tf::StampedTransform rfoot_transform;
         tf_listener_->lookupTransform(
-          parent_frame_id_, rfoot_frame_id_, stamp, rfoot_transform);
+          root_frame_id_, rfoot_frame_id_, stamp, rfoot_transform);
         tf::Quaternion lfoot_rot = lfoot_transform.getRotation();
         tf::Quaternion rfoot_rot = rfoot_transform.getRotation();
         tf::Quaternion mid_rot = lfoot_rot.slerp(rfoot_rot, 0.5);
@@ -307,55 +415,82 @@ namespace jsk_footstep_controller
         tf::Vector3 mid_pos = lfoot_pos.lerp(rfoot_pos, 0.5);
         midcoords_.setOrigin(mid_pos);
         midcoords_.setRotation(mid_rot);
+        midcoords_ = midcoords_;
         return true;
       }
       catch (tf2::ConnectivityException &e)
       {
-        ROS_ERROR("transform error: %s", e.what());
+        ROS_ERROR("[Footcoords::computeMidCoords] transform error: %s", e.what());
         return false;
       }
       catch (tf2::InvalidArgumentException &e)
       {
-        ROS_ERROR("transform error: %s", e.what());
+        ROS_ERROR("[Footcoords::computeMidCoords] transform error: %s", e.what());
         return false;
       }
       catch (tf2::ExtrapolationException &e)
       {
-        ROS_ERROR("transform error: %s", e.what());
+        ROS_ERROR("[Footcoords::computeMidCoords] transform error: %s", e.what());
       }
+      catch (tf2::LookupException &e)
+      {
+        ROS_ERROR("[Footcoords::computeMidCoords] transform error: %s", e.what());
+      }
+
     }
   }
-  
+
+  bool Footcoords::waitForSensorFrameTransformation(const ros::Time& stamp,
+                                                   const std::string& lsensor_frame,
+                                                   const std::string& rsensor_frame)
+  {
+    // lfsensor -> lleg_end_coords
+    if (!tf_listener_->waitForTransform(
+          lsensor_frame, lfoot_sensor_frame_, stamp, ros::Duration(1.0))) {
+      ROS_ERROR("[Footcoords::waitForSensorFrameTransformation] failed to lookup transform between %s and %s",
+                lsensor_frame.c_str(),
+                lfoot_sensor_frame_.c_str());
+      return false;
+    }
+    if (!tf_listener_->waitForTransform(
+          rsensor_frame, rfoot_sensor_frame_, stamp, ros::Duration(1.0))) {
+      ROS_ERROR("[Footcoords::waitForSensorFrameTransformation] failed to lookup transform between %s and %s",
+                rsensor_frame.c_str(),
+                rfoot_sensor_frame_.c_str());
+      return false;
+    }
+    return true;
+  }
+
   bool Footcoords::waitForEndEffectorTrasnformation(const ros::Time& stamp)
   {
     // odom -> lfoot
     if (!tf_listener_->waitForTransform(
-          parent_frame_id_, lfoot_frame_id_, stamp, ros::Duration(1.0))) {
-      ROS_ERROR("failed to lookup transform between %s and %s",
-                parent_frame_id_.c_str(),
+          root_frame_id_, lfoot_frame_id_, stamp, ros::Duration(1.0))) {
+      ROS_ERROR("[Footcoords::waitForEndEffectorTrasnformation] failed to lookup transform between %s and %s",
+                root_frame_id_.c_str(),
                 lfoot_frame_id_.c_str());
       return false;
     }
     // odom -> rfoot
     else if (!tf_listener_->waitForTransform(
-               parent_frame_id_, rfoot_frame_id_, stamp, ros::Duration(1.0))) {
-      ROS_ERROR("failed to lookup transform between %s and %s",
-                parent_frame_id_.c_str(),
+               root_frame_id_, rfoot_frame_id_, stamp, ros::Duration(1.0))) {
+      ROS_ERROR("[Footcoords::waitForEndEffectorTrasnformation]failed to lookup transform between %s and %s",
+                root_frame_id_.c_str(),
                 rfoot_frame_id_.c_str());
       return false;
     }
     // lfoot -> rfoot
     else if (!tf_listener_->waitForTransform(
                lfoot_frame_id_, rfoot_frame_id_, stamp, ros::Duration(1.0))) {
-      ROS_ERROR("failed to lookup transform between %s and %s",
+      ROS_ERROR("[Footcoords::waitForEndEffectorTrasnformation]failed to lookup transform between %s and %s",
                 lfoot_frame_id_.c_str(),
                 rfoot_frame_id_.c_str());
       return false;
     }
-
     return true;
   }
-  
+
   bool Footcoords::updateGroundTF()
   {
     // project `/odom` on the plane of midcoords_
@@ -363,41 +498,73 @@ namespace jsk_footstep_controller
     // we need odom -> odom_on_ground
     // 1. in order to get translation,
     //    project odom point to
-    Eigen::Affine3d odom_to_midcoords;
-    tf::transformTFToEigen(midcoords_, odom_to_midcoords);
-    Eigen::Affine3d midcoords_to_odom = odom_to_midcoords.inverse();
-    Eigen::Affine3d midcoords_to_odom_on_ground = midcoords_to_odom;
-    midcoords_to_odom_on_ground.translation().z() = 0.0;
-    Eigen::Vector3d zaxis;
-    zaxis[0] = midcoords_to_odom_on_ground(0, 2);
-    zaxis[1] = midcoords_to_odom_on_ground(1, 2);
-    zaxis[2] = midcoords_to_odom_on_ground(2, 2);
-    Eigen::Quaterniond rot;
-    rot.setFromTwoVectors(zaxis, Eigen::Vector3d(0, 0, 1));
-    midcoords_to_odom_on_ground.rotate(rot);
-    Eigen::Affine3d odom_to_odom_on_ground
-      = odom_to_midcoords * midcoords_to_odom_on_ground;
-    tf::transformEigenToTF(odom_to_odom_on_ground,
-                           ground_transform_);
+    if (false && support_status_ == BOTH_GROUND) {
+      // use locked_midcoords_to_odom_on_ground_ during dual stance phase
+      ground_transform_ = midcoords_ * locked_midcoords_to_odom_on_ground_;
+    }
+    else {
+      Eigen::Affine3d odom_to_midcoords;
+      tf::transformTFToEigen(midcoords_, odom_to_midcoords);
+      Eigen::Affine3d midcoords_to_odom = odom_to_midcoords.inverse();
+      Eigen::Affine3d midcoords_to_odom_on_ground = midcoords_to_odom;
+      midcoords_to_odom_on_ground.translation().z() = 0.0;
+      Eigen::Vector3d zaxis;
+      zaxis[0] = midcoords_to_odom_on_ground(0, 2);
+      zaxis[1] = midcoords_to_odom_on_ground(1, 2);
+      zaxis[2] = midcoords_to_odom_on_ground(2, 2);
+      Eigen::Quaterniond rot;
+      rot.setFromTwoVectors(zaxis, Eigen::Vector3d(0, 0, 1));
+      midcoords_to_odom_on_ground.rotate(rot);
+      Eigen::Affine3d odom_to_odom_on_ground
+        = odom_to_midcoords * midcoords_to_odom_on_ground;
+      tf::transformEigenToTF(odom_to_odom_on_ground,
+                             ground_transform_);
+    }
   }
 
   void Footcoords::publishTF(const ros::Time& stamp)
   {
     // publish midcoords_ and ground_cooords_
-    geometry_msgs::TransformStamped ros_midcoords, ros_ground_coords;
+    geometry_msgs::TransformStamped ros_midcoords, ros_ground_coords, ros_odom_root_coords, ros_odom_to_body_coords;
+
+    // ros_midcoords: ROOT -> ground
+    // ros_ground_coords: odom -> odom_on_ground = identity
+    // ros_odom_root_coords: odom -> odom_root = identity
+    // ros_ground_coords: odom_root -> odom_on_ground = identity
     std_msgs::Header header;
     header.stamp = stamp;
     header.frame_id = parent_frame_id_;
-    ros_midcoords.header = header;
+    ros_midcoords.header.stamp = stamp;
+    ros_midcoords.header.frame_id = root_frame_id_;
     ros_midcoords.child_frame_id = midcoords_frame_id_;
-    ros_ground_coords.header = header;
+    ros_ground_coords.header.stamp = stamp;
+    ros_ground_coords.header.frame_id = odom_root_frame_id_;
     ros_ground_coords.child_frame_id = output_frame_id_;
+    ros_odom_root_coords.header.stamp = stamp;
+    ros_odom_root_coords.header.frame_id = parent_frame_id_;
+    ros_odom_root_coords.child_frame_id = odom_root_frame_id_;
+    ros_odom_to_body_coords.header.stamp = stamp;
+    ros_odom_to_body_coords.header.frame_id = parent_frame_id_;
+    ros_odom_to_body_coords.child_frame_id = root_frame_id_;
+    
+    Eigen::Affine3d identity = Eigen::Affine3d::Identity();
     tf::transformTFToMsg(midcoords_, ros_midcoords.transform);
-    tf::transformTFToMsg(ground_transform_, ros_ground_coords.transform);
+    tf::transformEigenToMsg(identity, ros_ground_coords.transform);
+    tf::transformEigenToMsg(identity, ros_odom_root_coords.transform);
+    tf::transformEigenToMsg(identity, ros_ground_coords.transform);
+    tf::transformEigenToMsg(odom_pose_, ros_odom_to_body_coords.transform);
     std::vector<geometry_msgs::TransformStamped> tf_transforms;
     tf_transforms.push_back(ros_midcoords);
+    tf_transforms.push_back(ros_odom_root_coords);
     tf_transforms.push_back(ros_ground_coords);
+    tf_transforms.push_back(ros_odom_to_body_coords);
     tf_broadcaster_.sendTransform(tf_transforms);
+  }
+
+  void Footcoords::odomCallback(const nav_msgs::Odometry::ConstPtr& odom_msg)
+  {
+    boost::mutex::scoped_lock lock(mutex_);
+    tf::poseMsgToEigen(odom_msg->pose.pose, odom_pose_);
   }
 }
 
