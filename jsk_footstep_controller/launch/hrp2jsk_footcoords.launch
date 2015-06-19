@@ -1,0 +1,7 @@
+<launch>
+  <node pkg="jsk_footstep_controller"
+        type="footcoords"
+        name="footcoords"
+        >
+  </node>
+</launch>
