@@ -1,0 +1,12 @@
+Source: ros-indigo-joy-mouse
+Section: misc
+Priority: extra
+Maintainer: Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), python-pyudev, ros-indigo-catkin, ros-indigo-rospy, ros-indigo-sensor-msgs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-indigo-joy-mouse
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, python-pyudev, ros-indigo-rospy, ros-indigo-sensor-msgs
+Description: The joy_mouse package
