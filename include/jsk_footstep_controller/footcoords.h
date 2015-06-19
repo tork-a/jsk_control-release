@@ -35,7 +35,7 @@
 
 #ifndef JSK_FOOTSTEP_CONTROLLER_FOOTCOORDS_H_
 #define JSK_FOOTSTEP_CONTROLLER_FOOTCOORDS_H_
-
+#include <Eigen/Geometry>
 #include <geometry_msgs/WrenchStamped.h>
 #include <tf/transform_listener.h>
 #include <diagnostic_updater/diagnostic_updater.h>
@@ -46,7 +46,7 @@
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
 #include <jsk_footstep_controller/GroundContactState.h>
-
+#include <nav_msgs/Odometry.h>
 
 namespace jsk_footstep_controller
 {
@@ -71,7 +71,7 @@ namespace jsk_footstep_controller
   private:
   };
 
-  
+
   class ValueStamped
   {
   public:
@@ -109,6 +109,9 @@ namespace jsk_footstep_controller
     virtual bool computeMidCoordsFromSingleLeg(const ros::Time& stamp,
                                                bool use_left_leg);
     virtual bool waitForEndEffectorTrasnformation(const ros::Time& stamp);
+    virtual bool waitForSensorFrameTransformation(const ros::Time& stamp,
+                                                  const std::string& lsensor_frame,
+                                                  const std::string& rsensor_frame);
     virtual bool updateGroundTF();
     virtual void publishTF(const ros::Time& stamp);
     virtual void publishState(const std::string& state);
@@ -119,7 +122,16 @@ namespace jsk_footstep_controller
                                     double threshold);
     virtual bool allValueSmallerThan(TimeStampedVector<ValueStamped::Ptr>& values,
                                      double threshold);
+    virtual bool resolveForceTf(const geometry_msgs::WrenchStamped::ConstPtr& lfoot,
+                                const geometry_msgs::WrenchStamped::ConstPtr& rfoot,
+                                tf::Vector3& lfoot_force, tf::Vector3& rfoot_force);
+    virtual void periodicTimerCallback(const ros::TimerEvent& event);
+    virtual void odomCallback(const nav_msgs::Odometry::ConstPtr& odom_msg);
     // ros variables
+    boost::mutex mutex_;
+    Eigen::Affine3d odom_pose_;
+    ros::Timer periodic_update_timer_;
+    ros::Subscriber odom_sub_;
     message_filters::Subscriber<geometry_msgs::WrenchStamped> sub_lfoot_force_;
     message_filters::Subscriber<geometry_msgs::WrenchStamped> sub_rfoot_force_;
     boost::shared_ptr<message_filters::Synchronizer<SyncPolicy> >sync_;
@@ -136,10 +148,15 @@ namespace jsk_footstep_controller
     bool before_on_the_air_;
     std::string lfoot_frame_id_;
     std::string rfoot_frame_id_;
+    std::string lfoot_sensor_frame_;
+    std::string rfoot_sensor_frame_;
+    std::string root_frame_id_;
+    std::string odom_root_frame_id_;
     tf::Transform ground_transform_;
     tf::Transform midcoords_;
+    tf::Transform root_link_pose_;
+    tf::Transform locked_midcoords_to_odom_on_ground_;
     boost::shared_ptr<diagnostic_updater::Updater> diagnostic_updater_;
-    
     double prev_lforce_;
     double prev_rforce_;
     double alpha_;
