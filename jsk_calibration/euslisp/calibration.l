@@ -7,12 +7,14 @@
           angles x-angles y-angles
           reset-method motion-anglevectors camera-method filter-sampling
           filter-sampling-coords
-          collision-links board-object prompt chain-ids))
+          collision-links board-object prompt chain-ids
+          robust-motion root-link))
 
 (defmethod calibration-motion
   (:init (&key ((:robot-model arobot-model) nil)
                ((:chain-ids achain-ids) nil)
                ((:prompt aprompt) nil)
+               ((:root-link aroot-link) "BODY")
                ((:sampling-joint asampling-joint) nil)
                ((:distances adistances) nil)
                ((:camera-method acamera-method) nil)
@@ -25,7 +27,9 @@
                ((:x-angles ax-angles) '(0))
                ((:y-angles ay-angles) '(0))
                ((:board board) nil)
-               ((:limb alimb) nil))
+               ((:limb alimb) nil)
+               ((:robust-motion rob-motion) nil))
+    (setq root-link aroot-link)
     (setq chain-ids achain-ids)
     (setq angles aangles)
     (setq x-angles ax-angles)
@@ -41,6 +45,7 @@
     (setq sampling-joints asampling-joint)
     (setq distances adistances)
     (setq end-effector-offset aend-effector-offset)
+    (setq robust-motion rob-motion)
     ;; assoc
     (send board-object :transform
           (send (send robot-model limb :end-coords :copy-worldcoords)
@@ -49,7 +54,9 @@
     (setq collision-links (append acollision-links
                                   (mapcar #'(lambda (l)
                                               (cons board-object l))
-                                          (send arobot-model :links))))
+                                          (remove (send robot-model limb :end-coords :parent)
+                                                  (send arobot-model :links))
+                                          )))
     self)
   (:test-with-real-robot (ri &optional (not-use-y-or-n nil))
     ;; :reset-pose
@@ -92,6 +99,25 @@
      (format f "finish: ~A~%" "Skipping arm samples")
      (format f "repeat: False~%")
      ))
+  (:write-initial-poses (strm)
+    (dolist (angle-vector motion-anglevectors)
+     (send robot-model :angle-vector angle-vector)
+     (let ((root (send robot-model :link root-link))
+           (move-target (send robot-model limb :end-coords :copy-worldcoords)))
+       (send move-target :transform end-effector-offset)
+       (let ((trans (send (send root :copy-worldcoords) :transformation
+                          (send move-target :worldcoords))))
+         (let ((pos (scale 0.001 (send trans :worldpos)))
+               (ypr (send trans :rpy-angle)))
+           ;; select least rpy angle
+           (let ((a (mapcar #'(lambda (x) (if (> x pi) (- x 2pi) (if (< x -pi) (+ x 2pi) x))) (car ypr)))
+                 (b (mapcar #'(lambda (x) (if (> x pi) (- x 2pi) (if (< x -pi) (+ x 2pi) x))) (cadr ypr))))
+             (if (> (apply #'max (mapcar #'(lambda (x) (abs x)) a))
+                    (apply #'max (mapcar #'(lambda (x) (abs x)) b)))
+                 (setq ypr b) (setq ypr a)))
+           (format strm "- [~8,8f, ~8,8f, ~8,8f, ~8,8f, ~8,8f, ~8,8f]~%"
+                   (elt pos 0) (elt pos 1) (elt pos 2)
+                   (elt ypr 2) (elt ypr 1) (elt ypr 0)))))))
   (:generate-motion-yaml (root-directory arm angle-vector index tm)
     (let* ((fname (format nil "~A_~0,4d.yaml" (string arm) index))
            (full-path (format nil "~A/~A" root-directory fname)))
@@ -153,7 +179,6 @@
   (:refine-motion ()
     (let ((candidate-N 50)
           (max-N 30))
-      
       (let ((collision-freep nil)
             (angle-vector-sequence
              (if (> (length motion-anglevectors) candidate-N)
@@ -325,13 +350,21 @@
         (when ik-successp
           (setq collision-freep (not (send self :check-collision))))
         (cond ((not ik-successp)
-               (format t "~A/~A fail IK~%" current-test-no all-test-num))
+               (send c :draw-on :flush t :color (float-vector 1 0 0))
+               (send *irtviewer* :draw-objects)
+               (x::window-main-one)
+               (format t "~A/~A ~A ~A ~A ~A fail IK~%"
+                       current-test-no all-test-num
+                       l (rad2deg ang) (rad2deg x-ang) (rad2deg y-ang)))
               ((and ik-successp (not collision-freep))
-               (format t "~A/~A success IK but NOT collision free~%"
-                       current-test-no all-test-num))
+               (format t "~A/~A ~A ~A ~A ~A success IK but NOT collision free~%"
+                       current-test-no all-test-num
+                       l (rad2deg ang) (rad2deg x-ang) (rad2deg y-ang)))
               ((and ik-successp collision-freep)
-               (format t "~A/~A success IK and collision free~%"
-                       current-test-no all-test-num)))
+               (format t "~A/~A ~A ~A ~A ~A success IK and collision free~%"
+                       current-test-no all-test-num
+                       l (rad2deg ang) (rad2deg x-ang) (rad2deg y-ang)))
+              )
         (if (and ik-successp collision-freep)
             rr))))
   (:check-interpolation-collision (start end)
@@ -342,29 +375,31 @@
         (x::window-main-one)
         (let ((collision (send self :check-collision)))
           (when collision
-            (print av)
-            (pprint collision)
             (return-from :check-interpolation-collision t)))
       ))
     nil)
   (:check-collision ()
-    (and (send robot-model :self-collision-check :pairs collision-links)
-         (let ((links (send robot-model limb)))
-           ;; check collision with small difference to the joints
-           (let* ((joints (send-all links :joint))
-                  (initial-joint-anlges (send-all joints :joint-angle)))
-             (let ((test-samples (make-3bit-vector-combinations (length joints))))
-               (format t ">> checking robust collision-free pose~%")
-               (dolist (sample test-samples)
-                 ;; move
-                 (mapcar #'(lambda (j a d) (send j :joint-angle (+ a d)))
-                         joints initial-joint-anlges sample)
-                 (let ((result (send robot-model :self-collision-check :pairs collision-links)))
-                   (when result
-                     ;; reset to the original
-                     (mapcar #'(lambda (j a) (send j :joint-angle a))
-                             joints initial-joint-anlges)
-                     (return-from :check-collision result)))))))))
+    (let ((result (send robot-model :self-collision-check :pairs collision-links)))
+      (if result (return-from :check-collision result))
+      (unless robust-motion
+        (return-from :check-collision result)))
+    (let ((links (send robot-model limb)))
+      ;; check collision with small difference to the joints
+      (let* ((joints (send-all links :joint))
+             (initial-joint-anlges (send-all joints :joint-angle)))
+        (let ((test-samples (make-3bit-vector-combinations (length joints))))
+          (format t ">> checking robust collision-free pose~%")
+          (dolist (sample test-samples)
+            ;; move
+            (mapcar #'(lambda (j a d) (send j :joint-angle (+ a d)))
+                    joints initial-joint-anlges sample)
+            (let ((result (send robot-model :self-collision-check :pairs collision-links)))
+              (when result
+                ;; reset to the original
+                (mapcar #'(lambda (j a) (send j :joint-angle a))
+                        joints initial-joint-anlges)
+                (return-from :check-collision result)))))))
+    nil)
   (:set-model-sampling-angle (sample-angles)
     (dolist (sample-angle sample-angles)
       (send (car sample-angle) :joint-angle (cdr sample-angle))))
@@ -556,6 +591,13 @@
            (format f "      led_detector:~%")
            (format f "        active: False~%")
            )))))
+  (:generate-initial-poses (root-directory)
+    (let ((full-path (format nil "~A/capture_data/samples/initial_poses.yaml" root-directory)))
+      (with-open-file (f full-path :direction :output)
+        (dolist (motion motions)
+          (send (cdr motion) :write-initial-poses f)
+          )
+        )))
   (:generate-files (root-directory)
     ;; directory
     ;; root
@@ -575,11 +617,13 @@
       (send self :generate-settler-launch resolved-dir)
       (send self :generate-interval-launch resolved-dir)
       (send self :generate-cam-config resolved-dir)
+      (send self :generate-initial-poses resolved-dir)
       (let ((not-generated-files '("capture_data/all_pipelines.launch"
                                    "capture_data/all_viewers.launch"
                                    "capture_data/capture_data.launch"
                                    "capture_data/capture_exec.launch"
                                    "capture_data/hardware_config/laser_config.yaml"
+                                   "capture_data/samples/initial_poses.yaml"
                                    "view_results/scatter_config.yaml"
                                    "view_results/scatter.sh"
                                    )))
@@ -689,8 +733,8 @@
     (send cube :translate-vertices (float-vector 0 0 (- (+ 1.0 (/ 5 2.0)))))
     ;; add property to the board
     (setf (get cube :name) :mmurooka_board)
-    (setf (get cube :num_x) 5)
-    (setf (get cube :num_y) 6)
+    (setf (get cube :num_x) 6)
+    (setf (get cube :num_y) 5)
     cube))
 
 (defun angle-vector-duration (model start end &optional (scale 10.0) (min-time 1.0))
@@ -791,9 +835,9 @@
 
 ;; (make-3bit-vector-combinations 1) => '((-1) (0) (1))
 ;; (make-3bit-vector-combinations 2) => '((-1 -1) (-1 0) (-1 1) (0 -1) (0 0) (0 1) (1 0) (1 0) (1 1))
-(defun make-3bit-vector-combinations (num)
+(defun make-3bit-vector-combinations (num &optional (diff-angle 1.0))
   ;; use combinate-angles
-  (combinate-angles (mapcar #'(lambda (i) (list -1 0 1)) (make-list num))))
+  (combinate-angles (mapcar #'(lambda (i) (list (- diff-angle) 0 diff-angle)) (make-list num))))
 
 
 ;; xs is a list of 6 float-vector
