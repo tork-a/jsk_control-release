@@ -2,6 +2,9 @@
 Changelog for package eus_nlopt
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.6 (2015-06-11)
+------------------
+
 0.1.5 (2015-01-08)
 ------------------
 * remove engin from build_depend
