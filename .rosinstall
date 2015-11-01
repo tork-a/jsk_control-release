@@ -1,0 +1,5 @@
+# rviz stuff
+- git:
+    local-name: view_controller_msgs
+    uri: 'https://github.com/ros-visualization/view_controller_msgs'
+    version: hydro-devel
