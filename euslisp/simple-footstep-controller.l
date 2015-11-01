@@ -2,7 +2,7 @@
 
 ;; The most simplest version to execute footsteps by :set-foot-steps
 ;; method and have actionlib server interface
-(ros::roseus "footstep_controller")
+(ros::roseus "simple_footstep_controller")
 (ros::roseus-add-msgs "jsk_footstep_msgs")
 (load "package://jsk_footstep_controller/euslisp/util.l")
 ;; (load "package://jsk_robot_utils/euslisp/robot-interface-utils.l")
@@ -30,8 +30,7 @@
 
 (defun execute-cb (server goal)
   (ros::ros-info "execute-cb")
-  (let ((footstep (send goal :goal :footstep)))
-    (ros::publish "/footstep_goal" footstep)
+  (let ((footstep (send goal :goal :footstep))) 
     ;; footstep := jsk_recognition_msgs/FootstepArray
     (let ((footstep-coords (footstep-array->coords footstep)))
       (print-readable-coords footstep-coords)
@@ -39,15 +38,13 @@
       (send server :set-succeeded (send server :result))
       )))
 
-(ros::advertise "/footstep_goal" jsk_footstep_msgs::FootstepArray)
-
 (setq *server* (instance ros::simple-action-server :init
                          (ros::get-name)
                          jsk_footstep_msgs::ExecFootstepsAction
                          :execute-cb 'execute-cb))
 
 (ros::rate 10)
-(ros::ros-info "footstep controller is ready as ~A" (ros::get-name))
+(ros::ros-info "simple footstep controller is ready as ~A" (ros::get-name))
 (while (ros::ok)
   (send *server* :worker)
   (ros::spin-once)
