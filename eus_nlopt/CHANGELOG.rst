@@ -2,6 +2,12 @@
 Changelog for package eus_nlopt
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.7 (2015-11-01)
+------------------
+* use ftol xtol values in coresolver initialization
+* Remove manifest.xml and Makefile and use catkin style filesystem
+* Contributors: Ryohei Ueda, Shintaro Noda
+
 0.1.6 (2015-06-11)
 ------------------
 
