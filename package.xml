@@ -4,14 +4,15 @@
   <description>
     eus_qpoases
   </description>
-  <version>0.1.6</version>
+  <version>0.1.7</version>
   <maintainer email="nozawa@jsk.t.u-tokyo.ac.jp">Shunichi Nozawa</maintainer>
   <license>Apache License 2.0</license>
   <export> </export>
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>euslisp</build_depend>
-  <build_depend>mk</build_depend>
   <build_depend>subversion</build_depend>
+  <build_depend>rostest</build_depend>
 
   <run_depend>euslisp</run_depend>
+  <run_depend>rostest</run_depend>
 </package>
