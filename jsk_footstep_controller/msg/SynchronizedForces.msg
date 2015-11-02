@@ -1,5 +1,0 @@
-Header header
-geometry_msgs/WrenchStamped lleg_force
-geometry_msgs/WrenchStamped rleg_force
-sensor_msgs/JointState joint_angles
-geometry_msgs/PointStamped zmp
