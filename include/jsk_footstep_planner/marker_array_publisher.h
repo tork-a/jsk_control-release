@@ -33,57 +33,28 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-
-#ifndef JSK_FOOTSTEP_PLANNER_POINTCLOUD_MODEL_GENERATOR_H_
-#define JSK_FOOTSTEP_PLANNER_POINTCLOUD_MODEL_GENERATOR_H_
-
-#include <pcl/point_types.h>
-#include <pcl/point_cloud.h>
-
+#include <ros/ros.h>
+#include <visualization_msgs/MarkerArray.h>
 
 namespace jsk_footstep_planner
 {
-
-  /**
-   * @brief
-   *
-   * just a pointcloud generator for sample usage
-   */
-  class PointCloudModelGenerator
+  class MarkerArrayPublisher
   {
   public:
-    typedef boost::shared_ptr<PointCloudModelGenerator> Ptr;
-    typedef pcl::PointNormal PointT;
-    virtual void generate(const std::string& model_name,
-                          pcl::PointCloud<PointT>& output,
-                          double hole_rate = 0.0);
-    
-    static std::vector<std::string> supportedModels() {
-      std::vector<std::string> ret;
-      ret.push_back("flat");
-      ret.push_back("stairs");
-      ret.push_back("flat");
-      ret.push_back("gaussian");
-      return ret;
-    }
+    typedef boost::shared_ptr<MarkerArrayPublisher> Ptr;
+    MarkerArrayPublisher(ros::NodeHandle& nh, const std::string& topic);
+    virtual void publish();
+    virtual void insert(const std::string& name, visualization_msgs::Marker marker);
+    virtual void clear();
+    virtual void clear(const std::string& name);
   protected:
-    virtual void flat(pcl::PointCloud<PointT>& output,
-                      double hole_rate);
-    virtual void stairs(pcl::PointCloud<PointT>& output,
-                        double hole_rate);
-    virtual void hills(pcl::PointCloud<PointT>& output,
-                       double hole_rate);
-    virtual void gaussian(pcl::PointCloud<PointT>& output,
-                          double hole_rate);
-    virtual void flatPole(pcl::PointCloud<PointT>& output,
-                          double hole_rate);
-    virtual void addPole(pcl::PointCloud<PointT>& output,
-                         const Eigen::Vector3f& center,
-                         const double width,
-                         const double height);
+    
+    virtual size_t getID(const std::string& name);
+    
+    ros::Publisher pub_;
+    std::map<std::string, size_t> name_mapping_;
+    std::map<std::string, visualization_msgs::Marker> markers_;
   private:
     
   };
 }
-
-#endif
