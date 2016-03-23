@@ -2,7 +2,7 @@ project(eus_qp)
 
 cmake_minimum_required(VERSION 2.4.6)
 
-find_package(catkin COMPONENTS cmake_modules roscpp rostest)
+find_package(catkin COMPONENTS cmake_modules rostest)
 find_package(Eigen REQUIRED)
 
 include_directories(${Eigen_INCLUDE_DIRS})
@@ -21,3 +21,4 @@ catkin_package()
 add_executable(euq_qp_test src/example.cpp)
 add_library(eus_qp SHARED src/qp_lib.cpp)
 add_rostest(test/test_contact_wrench_opt.test)
+add_rostest(test/test_model_predictive_control.test)
