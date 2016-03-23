@@ -54,15 +54,18 @@ namespace jsk_footstep_planner
     FootstepGraph(const Eigen::Vector3f& resolution,
                   const bool use_pointcloud_model = false,
                   const bool lazy_projection = true,
-                  const bool local_movement = false):
+                  const bool local_movement = false,
+                  const bool use_obstacle_model = false):
       max_successor_distance_(0.0), max_successor_rotation_(0.0),
       pos_goal_thr_(0.1), rot_goal_thr_(0.17), publish_progress_(false),
       resolution_(resolution),
       use_pointcloud_model_(use_pointcloud_model),
       lazy_projection_(lazy_projection),
       local_movement_(local_movement),
+      use_obstacle_model_(use_obstacle_model),
       pointcloud_model_2d_(new pcl::PointCloud<pcl::PointNormal>),
       tree_model_(new pcl::KdTreeFLANN<pcl::PointNormal>),
+      obstacle_tree_model_(new pcl::KdTreeFLANN<pcl::PointXYZ>),
       tree_model_2d_(new pcl::search::Octree<pcl::PointNormal>(0.2)),
       grid_search_(new ANNGrid(0.05)),
       local_move_x_(0.1), local_move_y_(0.05), local_move_theta_(0.2),
@@ -76,11 +79,26 @@ namespace jsk_footstep_planner
       zero_state_(new FootstepState(0,
                                     Eigen::Affine3f::Identity(),
                                     Eigen::Vector3f::UnitX(),
-                                    resolution_))
+                                    resolution_)),
+      perception_duration_(0.0)
     {
     }
     virtual std::vector<StatePtr> successors(StatePtr target_state);
     virtual bool isGoal(StatePtr state);
+    
+    /**
+     * @brief
+     * return True if current_state collides with obstacle.
+     */
+    virtual bool isColliding(StatePtr current_state, StatePtr previous_state);
+    virtual pcl::PointIndices::Ptr getPointIndicesCollidingSphere(const Eigen::Affine3f& c);
+    virtual bool isCollidingBox(const Eigen::Affine3f& c, pcl::PointIndices::Ptr candidates) const;
+    /**
+     * @brief
+     * Compute robot coords from current footstep and previous footstep.
+     * R_robot = midcoords(F_current, F_previous) * R_offset;
+     */
+    virtual Eigen::Affine3f getRobotCoords(StatePtr current_state, StatePtr previous_state) const;
     virtual void setBasicSuccessors(
       std::vector<Eigen::Affine3f> left_to_right_successors);
     
@@ -129,6 +147,11 @@ namespace jsk_footstep_planner
       return max_successor_rotation_;
     }
 
+    virtual void setObstacleResolution(double res)
+    {
+      obstacle_resolution_ = res;
+    }
+    
     virtual void setProgressPublisher(ros::NodeHandle& nh, std::string topic)
     {
       publish_progress_ = true;
@@ -152,9 +175,17 @@ namespace jsk_footstep_planner
       tree_model_2d_->setInputCloud(pointcloud_model_2d_);
       grid_search_->build(*model);
     }
+
+    virtual void setObstacleModel(pcl::PointCloud<pcl::PointXYZ>::Ptr model)
+    {
+      obstacle_model_ = model;
+      obstacle_tree_model_->setInputCloud(obstacle_model_);
+    }
+    
     virtual bool projectGoal();
     virtual bool projectStart();
-    
+    virtual bool isSuccessable(StatePtr current_state, StatePtr previous_state);
+    virtual bool useObstacleModel() const { return use_obstacle_model_; }
     virtual bool usePointCloudModel() const { return use_pointcloud_model_; }
     virtual bool lazyProjection()  const { return lazy_projection_; }
     virtual bool localMovement() const { return local_movement_; }
@@ -178,12 +209,18 @@ namespace jsk_footstep_planner
     virtual TransitionLimit::Ptr getGlobalTransitionLimit() { return global_transition_limit_; }
     virtual FootstepState::Ptr projectFootstep(FootstepState::Ptr in);
     virtual FootstepState::Ptr projectFootstep(FootstepState::Ptr in, unsigned int& state);
-
+    virtual ros::WallDuration getPerceptionDuration() { return perception_duration_; }
+    virtual void clearPerceptionDuration() { perception_duration_ = ros::WallDuration(0.0); }
     virtual std::vector<FootstepState::Ptr> localMoveFootstepState(FootstepState::Ptr in);
+    virtual void setCollisionBBoxOffset(const Eigen::Affine3f& offset) { collision_bbox_offset_ = offset; }
+    virtual void setCollisionBBoxSize(const Eigen::Vector3f& size) { collision_bbox_size_ = size; }
+    
   protected:
     pcl::PointCloud<pcl::PointNormal>::Ptr pointcloud_model_;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr obstacle_model_;
     pcl::PointCloud<pcl::PointNormal>::Ptr pointcloud_model_2d_;
     pcl::KdTreeFLANN<pcl::PointNormal>::Ptr tree_model_;
+    pcl::KdTreeFLANN<pcl::PointXYZ>::Ptr obstacle_tree_model_;
     //pcl::KdTreeFLANN<pcl::PointNormal>::Ptr tree_model_2d_;
     pcl::search::Octree<pcl::PointNormal>::Ptr tree_model_2d_;
     ANNGrid::Ptr grid_search_;
@@ -196,6 +233,8 @@ namespace jsk_footstep_planner
      * zero_state is used only for global transition limit
      */
     FootstepState::Ptr zero_state_;
+    Eigen::Affine3f collision_bbox_offset_;
+    Eigen::Vector3f collision_bbox_size_;
     double max_successor_distance_;
     double max_successor_rotation_;
     double pos_goal_thr_;
@@ -204,6 +243,7 @@ namespace jsk_footstep_planner
     const bool use_pointcloud_model_;
     const bool lazy_projection_;
     const bool local_movement_;
+    const bool use_obstacle_model_;
     TransitionLimit::Ptr transition_limit_;
     TransitionLimit::Ptr global_transition_limit_;
     double local_move_x_;
@@ -212,6 +252,7 @@ namespace jsk_footstep_planner
     size_t local_move_x_num_;
     size_t local_move_y_num_;
     size_t local_move_theta_num_;
+    double obstacle_resolution_;
     
     ros::Publisher pub_progress_;
     const Eigen::Vector3f resolution_;
@@ -222,6 +263,7 @@ namespace jsk_footstep_planner
     int support_check_x_sampling_;
     int support_check_y_sampling_;
     double support_check_vertex_neighbor_threshold_;
+    ros::WallDuration perception_duration_;
   private:
 
   };

@@ -1,15 +1,22 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(jsk_footstep_planner)
 
+# Use ccache if installed to make it fast to generate object files
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+endif(CCACHE_FOUND)
+
 find_package(catkin REQUIRED COMPONENTS jsk_footstep_msgs jsk_recognition_utils
-  message_generation jsk_topic_tools roscpp pcl_ros
+  message_generation jsk_topic_tools roscpp pcl_ros geometry_msgs
   jsk_interactive_marker visualization_msgs dynamic_reconfigure)
 find_package(PCL REQUIRED)
 add_service_files(FILES
-  ChangeSuccessor.srv)
+  ChangeSuccessor.srv CollisionBoundingBoxInfo.srv)
 generate_dynamic_reconfigure_options(
-  cfg/FootstepPlanner.cfg cfg/PointCloudModelGenerator.cfg)
-generate_messages()
+  cfg/FootstepPlanner.cfg cfg/PointCloudModelGenerator.cfg cfg/FootstepMarker.cfg)
+generate_messages(DEPENDENCIES geometry_msgs)
 #catkin_python_setup()
 catkin_package(
   DEPENDS
@@ -28,6 +35,8 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}
 include_directories(include ${catkin_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
 link_libraries(${pcl_ros_LIBRARIES} ${catkin_LIBRARIES})
 add_library(jsk_footstep_planner
+  src/footstep_conversions.cpp
+  src/marker_array_publisher.cpp
   src/simple_neighbored_graph.cpp
   src/footstep_state.cpp
   src/footstep_graph.cpp
@@ -37,6 +46,9 @@ add_library(jsk_footstep_planner
   src/transition_limit.cpp
   src/footstep_planner.cpp
   src/line2d.cpp)
+
+add_executable(footstep_marker src/footstep_marker.cpp)
+target_link_libraries(footstep_marker jsk_footstep_planner)
 
 add_executable(sample_simple_graph demo/sample_simple_graph.cpp)
 target_link_libraries(sample_simple_graph jsk_footstep_planner)
