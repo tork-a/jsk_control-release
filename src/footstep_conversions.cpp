@@ -33,57 +33,44 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-
-#ifndef JSK_FOOTSTEP_PLANNER_POINTCLOUD_MODEL_GENERATOR_H_
-#define JSK_FOOTSTEP_PLANNER_POINTCLOUD_MODEL_GENERATOR_H_
-
-#include <pcl/point_types.h>
-#include <pcl/point_cloud.h>
-
+#include "jsk_footstep_planner/footstep_conversions.h"
+#include "jsk_recognition_utils/pcl_conversion_util.h"
 
 namespace jsk_footstep_planner
 {
-
-  /**
-   * @brief
-   *
-   * just a pointcloud generator for sample usage
-   */
-  class PointCloudModelGenerator
+  jsk_footstep_msgs::Footstep footstepFromEigenPose(Eigen::Affine3f pose)
   {
-  public:
-    typedef boost::shared_ptr<PointCloudModelGenerator> Ptr;
-    typedef pcl::PointNormal PointT;
-    virtual void generate(const std::string& model_name,
-                          pcl::PointCloud<PointT>& output,
-                          double hole_rate = 0.0);
-    
-    static std::vector<std::string> supportedModels() {
-      std::vector<std::string> ret;
-      ret.push_back("flat");
-      ret.push_back("stairs");
-      ret.push_back("flat");
-      ret.push_back("gaussian");
-      return ret;
+    jsk_footstep_msgs::Footstep footstep;
+    tf::poseEigenToMsg(pose, footstep.pose);
+    return footstep;
+  }
+  
+  visualization_msgs::Marker footstepToMarker(const jsk_footstep_msgs::Footstep& footstep,
+                                              const std_msgs::Header& header)
+  {
+    visualization_msgs::Marker marker;
+    marker.header = header;
+    marker.type = visualization_msgs::Marker::CUBE;
+    marker.scale = footstep.dimensions;
+    marker.color.a = 1.0;
+    marker.pose = footstep.pose;
+    if (footstep.leg == jsk_footstep_msgs::Footstep::LEFT) {
+      marker.color.g = 1.0;
     }
-  protected:
-    virtual void flat(pcl::PointCloud<PointT>& output,
-                      double hole_rate);
-    virtual void stairs(pcl::PointCloud<PointT>& output,
-                        double hole_rate);
-    virtual void hills(pcl::PointCloud<PointT>& output,
-                       double hole_rate);
-    virtual void gaussian(pcl::PointCloud<PointT>& output,
-                          double hole_rate);
-    virtual void flatPole(pcl::PointCloud<PointT>& output,
-                          double hole_rate);
-    virtual void addPole(pcl::PointCloud<PointT>& output,
-                         const Eigen::Vector3f& center,
-                         const double width,
-                         const double height);
-  private:
-    
-  };
+    else {
+      marker.color.r = 1.0;
+    }
+    return marker;
+  }
+  
+  visualization_msgs::MarkerArray footstepArrayToMarkerArray(const jsk_footstep_msgs::FootstepArray& footstep_array)
+  {
+    visualization_msgs::MarkerArray marker_array;
+    for (size_t i = 0; i < footstep_array.footsteps.size(); i++) {
+      jsk_footstep_msgs::Footstep footstep = footstep_array.footsteps[i];
+      visualization_msgs::Marker marker = footstepToMarker(footstep, footstep_array.header);
+      marker_array.markers.push_back(marker);
+    }
+    return marker_array;
+  }
 }
-
-#endif
