@@ -8,7 +8,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun wrench-distribute-from-total-wrench
   (contact-coords-list contact-constraint-matrix-list
-   &key (debug) (robot)
+   &key (debug t) (robot)
         (total-wrench (concatenate float-vector (send (car (send robot :links)) :force) (send (car (send robot :links)) :moment)))
         (initial-state ;; calc initial state from pseudo-inverse
          (send robot :wrench-list->wrench-vector
@@ -65,9 +65,9 @@
                   :inequality-matrix inequality-matrix
                   :inequality-min-vector inequality-min-vector
                   :check-status check-status
+                  :debug debug
                   (if use-min-inequality-violation-p
                       (list :state-min-vector state-min-vector))
-                  ;;:debug debug
                   )))
       (if ret
           (list :wrench-list (send robot :wrench-vector->wrench-list
@@ -94,7 +94,7 @@
                             (send robot :calc-contact-wrenches-from-total-wrench
                                   (send-all contact-coords-list :worldpos) :total-wrench total-wrench))
                       (instantiate float-vector (length inertial-torque))))
-        (debug)
+        (debug t)
 ;;        (qp-solver #'solve-eiquadprog))
 ;;        (qp-solver #'solve-octave-qp))
         (qp-solver #'solve-qpoases)
@@ -154,7 +154,7 @@
                  :equality-matrix equality-matrix
                  :equality-vector equality-vector
                  :check-status check-status
-                 ;;:debug debug
+                 :debug debug
                  )))
       (if ret
           (list :wrench-list (send robot :wrench-vector->wrench-list
@@ -182,7 +182,8 @@
                      (send-all contact-coords-list :worldpos) :total-wrench total-wrench)))
         (contact-constraint-vector-list)
         (min-inequality-violation-weight) (min-inequality-violation-weight-vector)
-        (debug)
+        ((:jacobi tmp-jacobi))
+        (debug t)
 ;;        (qp-solver #'solve-eiquadprog))
 ;;        (qp-solver #'solve-octave-qp))
         (qp-solver #'solve-qpoases-qp)
@@ -197,12 +198,14 @@
           (send robot :calc-grasp-matrix (send-all contact-coords-list :worldpos)))
          (equality-vector total-wrench)
          (jacobi
-          (send robot :calc-jacobian-from-link-list
-                link-list
-                :move-target contact-coords-list
-                :rotation-axis (mapcar #'(lambda (x) t) contact-coords-list)
-                :translation-axis (mapcar #'(lambda (x) t) contact-coords-list)
-                :transform-coords (mapcar #'(lambda (x) (make-coords)) contact-coords-list)))
+          (if tmp-jacobi
+              tmp-jacobi
+            (send robot :calc-jacobian-from-link-list
+                  link-list
+                  :move-target contact-coords-list
+                  :rotation-axis (mapcar #'(lambda (x) t) contact-coords-list)
+                  :translation-axis (mapcar #'(lambda (x) t) contact-coords-list)
+                  :transform-coords (mapcar #'(lambda (x) (make-coords)) contact-coords-list))))
          (jacobi^T (transpose jacobi))
          ;; inequality
          (inequality-matrix
@@ -260,9 +263,9 @@
                  :equality-matrix equality-matrix
                  :equality-vector equality-vector
                  :check-status check-status
+                 :debug debug
                  (if use-min-inequality-violation-p
                      (list :state-min-vector state-min-vector))
-                 ;;:debug debug
                  )))
       (if ret
           (let ((ret-wrench (if use-min-inequality-violation-p (subseq ret 0 state-dim) ret)))
@@ -295,7 +298,6 @@
            (make-matrix (length mat-list) (length (car mat-list)) mat-list)))
    (let ((vec-list (cadr (memq :vector constraint-param-list))))
      (setq constraint-vector (concatenate float-vector vec-list)))
-   (send self :gen-drawing-object)
    self)
   (:constraint-param-list () constraint-param-list)
   (:gen-drawing-object
@@ -304,6 +306,10 @@
    )
   (:draw-on
    (&key (flush t))
+   (unless drawing-object
+     (send self :gen-drawing-object)
+     (if drawing-object
+         (send drawing-object :newcoords contact-coords)))
    (when drawing-object
      (send drawing-object :worldcoords)
      (send* drawing-object :draw-on :flush flush (send drawing-object :get :draw-on-args)))
@@ -520,25 +526,81 @@
 
 (defmethod default-contact-constraint
   (:init
-   (&key (mu-trans) (mu-rot) (slide-axis)
+   (&key (mu-margin-ratio 1.0) (cop-margin-ratio 1.0)
+         (mu-trans) (mu-rot) (slide-axis)
          (l-max-x) (l-max-y) (l-min-x) (l-min-y)
-         (name))
+         (name) (max-fz))
    "Calc default constraint matrix.
     This is include 2D friction force, 1D rotational friction moment, non-negative normal force, and 2D-COP constraint,
-    e.g., for foot constraint."
+    e.g., for foot constraint.
+    mu-margin-ratio and cop-margin-ratio are in [0.0, 1.0] and used for reduce contact constraint boudaries.
+    If xx-margin-ratio is 1.0, contact constraint boudaries are same as original one.
+    If xx-margin-ratio is in (0.0, 1.0), contact constraint boudaries are reduced.
+    If xx-margin-ratio is 0.0, no friction or point contact."
    (setq contact-constraint-list
-         (list
+         (append
+          (list
            ;; friction
-          (if slide-axis
-              (instance 2D-translational-sliding-contact-constraint :init mu-trans :slide-axis slide-axis)
-              (instance 2D-translational-friction-contact-constraint :init mu-trans))
-           (instance rotational-friction-contact-constraint :init mu-rot :fz)
+           (if slide-axis
+               (instance 2D-translational-sliding-contact-constraint :init (* mu-margin-ratio mu-trans) :slide-axis slide-axis)
+             (instance 2D-translational-friction-contact-constraint :init (* mu-margin-ratio mu-trans)))
+           (instance rotational-friction-contact-constraint :init (* mu-margin-ratio mu-rot) :fz)
            ;; cop
-           (instance 2D-cop-contact-constraint :init l-max-x l-min-x l-max-y l-min-y)
+           (instance 2D-cop-contact-constraint :init (* cop-margin-ratio l-max-x) (* cop-margin-ratio l-min-x) (* cop-margin-ratio l-max-y) (* cop-margin-ratio l-min-y))
            ;; fz
            (instance norm-contact-constraint :init :fz)
-           ))
+           )
+          (if max-fz
+              (list (instance min-max-contact-constraint :init :fz max-fz :min/max :max)))))
    (send-super :init :name name)
+   )
+  )
+
+(defclass default-gripper-contact-constraint
+  :super contact-constraint
+  )
+
+(defmethod default-gripper-contact-constraint
+  (:init
+   (&key (mu-trans) (mu-rot)
+         (l-min) (l-max) (max-fx) (max-fy) (min-fy) (max-nx) (min-nx)
+         (mu-margin-ratio 1.0) (cop-margin-ratio 1.0)
+         (name))
+   "Calc default gripper constraint matrix.
+    Axes are set for default euslisp end-coords criteria, e.g,
+     X : Hand forward.
+     Y : Palm <-> back of the hand
+     Z : Gripper axis.
+    We linearlize friction constraints.
+    Here we assume |Fx| >= |Fy|.
+    For mu-margin-ratio and cop-margin-ratio, please see default-contact-constraint documentation."
+   (let ((ret
+          (list
+           ;; Friction (mu fx >= fz >= -mu fx)
+           (calc-constraint-param-list-for-translational-friction
+            (* mu-trans mu-margin-ratio) :fx :fz)
+           ;; Friction (mu fx >= nz >= -mu fx)
+           (calc-constraint-param-list-for-rotational-friction
+            (* mu-rot mu-margin-ratio) :fx :fric-axis :nz)
+           ;; Cop (l-max fx >= ny >= l-min fx)
+           (calc-constraint-param-list-for-1D-cop
+            (* l-max cop-margin-ratio) (* l-min cop-margin-ratio)
+            :force-axis :fx :moment-axis :ny)
+           ;; Fx >= 0
+           (calc-constraint-param-list-for-norm :fx)
+           ;; Fx max limit
+           (calc-constraint-param-list-for-min-max :fx max-fx :min/max :max)
+           ;; Fy limit
+           (calc-constraint-param-list-for-min-max :fy max-fy :min/max :max)
+           (calc-constraint-param-list-for-min-max :fy min-fy :min/max :min)
+           ;; Nx limit
+           (calc-constraint-param-list-for-min-max :nx max-nx :min/max :max)
+           (calc-constraint-param-list-for-min-max :nx min-nx :min/max :min)
+           )))
+     (setq constraint-param-list
+           (list :matrix (apply #'append (mapcar #'(lambda (x) (cadr (memq :matrix x))) ret))
+                 :vector (apply #'append (mapcar #'(lambda (x) (cadr (memq :vector x))) ret)))))
+     (send-super :init :name name)
    )
   )
 
@@ -558,6 +620,31 @@
                            (list (calc-constraint-param-list-for-min-max axis 0 :min/max :min)
                                  (calc-constraint-param-list-for-min-max axis 0 :min/max :max)))
                        '(:fx :fy :fz :nx :ny :nz)))))
+     (setq constraint-param-list
+           (list :matrix (apply #'append (mapcar #'(lambda (x) (cadr (memq :matrix x))) ret))
+                 :vector (apply #'append (mapcar #'(lambda (x) (cadr (memq :vector x))) ret)))))
+   (send-super :init :name name))
+  )
+
+(defclass 6d-min-max-contact-constraint
+  :super contact-constraint
+  :slots (max-wrench)
+  )
+
+(defmethod 6d-min-max-contact-constraint
+  (:init
+   (tmp-max-wrench &key (name))
+   "Calc 6D wrench min-max constraint.
+    tmp-max-wrench should be 6D vector of max wrench.
+    Absolute values of min wrench and max wrench are same.
+    This can be used for approximating the grasping contact."
+   (setq max-wrench tmp-max-wrench)
+   (let ((ret (apply
+               #'append
+               (mapcar #'(lambda (axis max-value)
+                           (list (calc-constraint-param-list-for-min-max axis (- max-value) :min/max :min)
+                                 (calc-constraint-param-list-for-min-max axis max-value :min/max :max)))
+                       '(:fx :fy :fz :nx :ny :nz) (coerce max-wrench cons)))))
      (setq constraint-param-list
            (list :matrix (apply #'append (mapcar #'(lambda (x) (cadr (memq :matrix x))) ret))
                  :vector (apply #'append (mapcar #'(lambda (x) (cadr (memq :vector x))) ret)))))
@@ -736,11 +823,11 @@
     (list :matrix ret :vector (list 0 0))
     ))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Utilities
+;; Utilities for old euslisp environment
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(unless (fboundp' concatenate-matrix-column)
 (defun concatenate-matrix-column (&rest args)
   "Concatenate matrix in column direction."
   (let (m ml (size-of-column (array-dimension (car args) 1)))
@@ -751,9 +838,9 @@
       (dotimes (i m)
 	(push (matrix-row mat i) ml)))
     (when ml (apply #'matrix (reverse ml)))
-    ))
+    )))
 
-
+(unless (fboundp' concatenate-matrix-row)
 (defun concatenate-matrix-row (&rest args)
   "Concatenate matrix in row direction."
   (let (m ml (size-of-column (array-dimension (car args) 0)))
@@ -764,9 +851,9 @@
       (dotimes (i m)
 	(push (matrix-column mat i) ml)))
     (when ml (transpose (apply #'matrix (reverse ml))))
-    ))
+    )))
 
-
+(unless (fboundp' concatenate-matrix-diagonal)
 (defun concatenate-matrix-diagonal (&rest args)
   "Concatenate matrix in diagonal."
   (let (mat m ll ml vl)
@@ -786,4 +873,4 @@
 	(push (apply #'concatenate
 		     (cons float-vector (reverse vl))) ml)))
     (when ml (apply #'matrix (reverse ml)))
-    ))
+    )))
