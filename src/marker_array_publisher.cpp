@@ -33,57 +33,61 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-
-#ifndef JSK_FOOTSTEP_PLANNER_POINTCLOUD_MODEL_GENERATOR_H_
-#define JSK_FOOTSTEP_PLANNER_POINTCLOUD_MODEL_GENERATOR_H_
-
-#include <pcl/point_types.h>
-#include <pcl/point_cloud.h>
-
+#include "jsk_footstep_planner/marker_array_publisher.h"
 
 namespace jsk_footstep_planner
 {
-
-  /**
-   * @brief
-   *
-   * just a pointcloud generator for sample usage
-   */
-  class PointCloudModelGenerator
+  MarkerArrayPublisher::MarkerArrayPublisher(ros::NodeHandle& nh, const std::string& topic)
   {
-  public:
-    typedef boost::shared_ptr<PointCloudModelGenerator> Ptr;
-    typedef pcl::PointNormal PointT;
-    virtual void generate(const std::string& model_name,
-                          pcl::PointCloud<PointT>& output,
-                          double hole_rate = 0.0);
-    
-    static std::vector<std::string> supportedModels() {
-      std::vector<std::string> ret;
-      ret.push_back("flat");
-      ret.push_back("stairs");
-      ret.push_back("flat");
-      ret.push_back("gaussian");
-      return ret;
-    }
-  protected:
-    virtual void flat(pcl::PointCloud<PointT>& output,
-                      double hole_rate);
-    virtual void stairs(pcl::PointCloud<PointT>& output,
-                        double hole_rate);
-    virtual void hills(pcl::PointCloud<PointT>& output,
-                       double hole_rate);
-    virtual void gaussian(pcl::PointCloud<PointT>& output,
-                          double hole_rate);
-    virtual void flatPole(pcl::PointCloud<PointT>& output,
-                          double hole_rate);
-    virtual void addPole(pcl::PointCloud<PointT>& output,
-                         const Eigen::Vector3f& center,
-                         const double width,
-                         const double height);
-  private:
-    
-  };
-}
+    pub_ = nh.advertise<visualization_msgs::MarkerArray>(topic, 1, true);
+  }
 
-#endif
+  void MarkerArrayPublisher::insert(const std::string& name, visualization_msgs::Marker marker)
+  {
+    marker.id = getID(name);
+    markers_[name] = marker;
+  }
+
+  void MarkerArrayPublisher::publish()
+  {
+    visualization_msgs::MarkerArray marker_array;
+    for (std::map<std::string, visualization_msgs::Marker>::iterator it = markers_.begin();
+         it != markers_.end();
+         ++it) {
+      marker_array.markers.push_back(it->second);
+    }
+    pub_.publish(marker_array);
+  }
+
+  void MarkerArrayPublisher::clear(const std::string& name)
+  {
+    if (markers_.count(name) == 0) {
+      // do nothing
+    }
+    else {
+      visualization_msgs::Marker clear_marker;
+      clear_marker.id = getID(name);
+      clear_marker.action = visualization_msgs::Marker::DELETE;
+      markers_[name] = clear_marker;
+    }
+  }
+  
+  void MarkerArrayPublisher::clear()
+  {
+    for (std::map<std::string, visualization_msgs::Marker>::iterator it = markers_.begin();
+         it != markers_.end();
+         ++it) {
+      clear(it->first);
+    }
+  }
+  
+  size_t MarkerArrayPublisher::getID(const std::string& name)
+  {
+    if (name_mapping_.count(name) == 0) {
+      name_mapping_[name] = name_mapping_.size();
+    }
+    else {
+      return name_mapping_[name];
+    }
+  }
+}
