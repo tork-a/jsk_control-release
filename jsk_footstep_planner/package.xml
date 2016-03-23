@@ -1,6 +1,6 @@
 <package>
   <name>jsk_footstep_planner</name>
-  <version>0.1.8</version>
+  <version>0.1.9</version>
   <description>jsk_footstep_planner</description>
   <maintainer email="ueda@jsk.t.u-tokyo.ac.jp">Ryohei Ueda</maintainer>
 
@@ -41,6 +41,12 @@
 
   <build_depend>dynamic_reconfigure</build_depend>
   <run_depend>dynamic_reconfigure</run_depend>
+
+  <build_depend>message_generation</build_depend>
+
+  <build_depend>geometry_msgs</build_depend>
+  <run_depend>geometry_msgs</run_depend>
+
   <export>
 
   </export>
