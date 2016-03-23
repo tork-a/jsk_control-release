@@ -2,6 +2,11 @@
 Changelog for package eus_qpoases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.9 (2016-03-23)
+------------------
+* [eus_qpoases/euslisp/eus-qpoases.l] Use concatenate matrix functions in irteus and fix checking of ineq and eq existence
+* Contributors: Shunichi Nozawa
+
 0.1.8 (2015-11-02)
 ------------------
 
