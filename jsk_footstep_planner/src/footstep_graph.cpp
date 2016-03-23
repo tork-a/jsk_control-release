@@ -56,7 +56,8 @@ namespace jsk_footstep_planner
     // max_successor_distance_
     for (size_t i = 0; i < successors_from_left_to_right_.size(); i++) {
       Eigen::Affine3f transform = successors_from_left_to_right_[i];
-      double dist = transform.translation().norm();
+      //double dist = transform.translation().norm();
+      double dist = transform.translation()[0]; // Only consider x
       if (dist > max_successor_distance_) {
         max_successor_distance_ = dist;
       }
@@ -82,6 +83,59 @@ namespace jsk_footstep_planner
     Eigen::Affine3f transformation = pose.inverse() * goal_pose;
     return (pos_goal_thr_ > transformation.translation().norm()) &&
       (rot_goal_thr_ > std::abs(Eigen::AngleAxisf(transformation.rotation()).angle()));
+  }
+
+  
+  Eigen::Affine3f FootstepGraph::getRobotCoords(StatePtr current_state, StatePtr previous_state) const
+  {
+    Eigen::Affine3f mid = current_state->midcoords(*previous_state);
+    return mid * collision_bbox_offset_;
+  }
+
+  pcl::PointIndices::Ptr FootstepGraph::getPointIndicesCollidingSphere(const Eigen::Affine3f& c)
+  {
+    pcl::PointXYZ center;
+    center.getVector3fMap() = Eigen::Vector3f(c.translation());
+    const double r = collision_bbox_size_.norm() / 2 + obstacle_resolution_;
+    pcl::PointIndices::Ptr near_indices(new pcl::PointIndices);
+    std::vector<float> distances;
+    obstacle_tree_model_->radiusSearch(center, r, near_indices->indices, distances);
+    return near_indices;
+  }
+
+  bool FootstepGraph::isCollidingBox(const Eigen::Affine3f& c, pcl::PointIndices::Ptr candidates) const
+  {
+    const pcl::PointCloud<pcl::PointXYZ>::ConstPtr input_cloud = obstacle_tree_model_->getInputCloud();
+    Eigen::Affine3f inv_c = c.inverse();
+    for (size_t i = 0; i < candidates->indices.size(); i++) {
+      int index = candidates->indices[i];
+      const pcl::PointXYZ candidate_point = input_cloud->points[index];
+      // convert candidate_point into `c' local representation.
+      const Eigen::Vector3f local_p = inv_c * candidate_point.getVector3fMap();
+      if (std::abs(local_p[0]) < collision_bbox_size_[0] / 2 &&
+          std::abs(local_p[1]) < collision_bbox_size_[1] / 2 &&
+          std::abs(local_p[2]) < collision_bbox_size_[2] / 2) {
+        return true;
+      }
+    }
+    return false;
+  }
+                                       
+  // return true if colliding with obstacle
+  bool FootstepGraph::isColliding(StatePtr current_state, StatePtr previous_state)
+  {
+    // if not use obstacle model, always return false
+    // to be collision-free always.
+    if (!use_obstacle_model_) {
+      return false;
+    }
+    // compute robot coorde
+    Eigen::Affine3f robot_coords = getRobotCoords(current_state, previous_state);
+    pcl::PointIndices::Ptr sphere_candidate = getPointIndicesCollidingSphere(robot_coords);
+    if (sphere_candidate->indices.size() == 0) {
+      return false;
+    }
+    return isCollidingBox(robot_coords, sphere_candidate);
   }
 
   std::string FootstepGraph::infoString() const
@@ -119,6 +173,25 @@ namespace jsk_footstep_planner
     ss << "  support_check_vertex_neighbor_threshold: " << support_check_vertex_neighbor_threshold_ << std::endl;
     
     return ss.str();
+  }
+
+  bool
+  FootstepGraph::isSuccessable(StatePtr current_state, StatePtr previous_state)
+  {
+    if (global_transition_limit_) {
+      if (!global_transition_limit_->check(zero_state_, current_state)) {
+        return false;
+      }
+    }
+    if (transition_limit_) {
+      if (!transition_limit_->check(previous_state, current_state)) {
+        return false;
+      }
+    }
+    if (use_obstacle_model_) {
+      return !isColliding(current_state, previous_state);
+    }
+    return true;
   }
   
   std::vector<FootstepState::Ptr>
@@ -178,38 +251,14 @@ namespace jsk_footstep_planner
           std::vector<StatePtr> locally_moved_nodes
             = localMoveFootstepState(next);
           for (size_t j = 0; j < locally_moved_nodes.size(); j++) {
-            if (global_transition_limit_) {
-              if (!global_transition_limit_->check(zero_state_, locally_moved_nodes[j])) {
-                // New footstep does not satisfy global transition limit,
-                // so we go back to the beginning of the loop
-                continue;
-              }
-            }
-            if (transition_limit_) {
-              if (transition_limit_->check(target_state, locally_moved_nodes[j])) {
-                ret.push_back(locally_moved_nodes[j]);
-              }
-            }
-            else {
+            if (isSuccessable(locally_moved_nodes[j], target_state)) {
               ret.push_back(locally_moved_nodes[j]);
             }
           }
         }
       }
       if (next) {
-        if (global_transition_limit_) {
-          if (!global_transition_limit_->check(zero_state_, next)) {
-            // New footstep does not satisfy global transition limit,
-            // so we go back to the beginning of the loop
-            continue;       
-          }
-        }
-        if (transition_limit_) {
-          if (transition_limit_->check(target_state, next)) {
-            ret.push_back(next);
-          }
-        }
-        else {
+        if (isSuccessable(next, target_state)) {
           ret.push_back(next);
         }
       }
@@ -227,6 +276,7 @@ namespace jsk_footstep_planner
   FootstepState::Ptr FootstepGraph::projectFootstep(FootstepState::Ptr in,
                                                     unsigned int& error_state)
   {
+    ros::WallTime start_time = ros::WallTime::now();
     FootstepState::Ptr projected_footstep = in->projectToCloud(
       *tree_model_,
       pointcloud_model_,
@@ -241,7 +291,8 @@ namespace jsk_footstep_planner
       support_check_x_sampling_,
       support_check_y_sampling_,
       support_check_vertex_neighbor_threshold_);
-    
+    ros::WallTime end_time = ros::WallTime::now();
+    perception_duration_ = perception_duration_ + (end_time  - start_time);
     return projected_footstep;
   }
   
