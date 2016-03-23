@@ -34,56 +34,20 @@
  *********************************************************************/
 
 
-#ifndef JSK_FOOTSTEP_PLANNER_POINTCLOUD_MODEL_GENERATOR_H_
-#define JSK_FOOTSTEP_PLANNER_POINTCLOUD_MODEL_GENERATOR_H_
+#ifndef JSK_FOOTSTEP_PLANNER_FOOTSTEP_CONVERSIONS_H_
+#define JSK_FOOTSTEP_PLANNER_FOOTSTEP_CONVERSIONS_H_
 
-#include <pcl/point_types.h>
-#include <pcl/point_cloud.h>
-
+#include <jsk_footstep_msgs/Footstep.h>
+#include <jsk_footstep_msgs/FootstepArray.h>
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
+#include <Eigen/Geometry>
 
 namespace jsk_footstep_planner
 {
-
-  /**
-   * @brief
-   *
-   * just a pointcloud generator for sample usage
-   */
-  class PointCloudModelGenerator
-  {
-  public:
-    typedef boost::shared_ptr<PointCloudModelGenerator> Ptr;
-    typedef pcl::PointNormal PointT;
-    virtual void generate(const std::string& model_name,
-                          pcl::PointCloud<PointT>& output,
-                          double hole_rate = 0.0);
-    
-    static std::vector<std::string> supportedModels() {
-      std::vector<std::string> ret;
-      ret.push_back("flat");
-      ret.push_back("stairs");
-      ret.push_back("flat");
-      ret.push_back("gaussian");
-      return ret;
-    }
-  protected:
-    virtual void flat(pcl::PointCloud<PointT>& output,
-                      double hole_rate);
-    virtual void stairs(pcl::PointCloud<PointT>& output,
-                        double hole_rate);
-    virtual void hills(pcl::PointCloud<PointT>& output,
-                       double hole_rate);
-    virtual void gaussian(pcl::PointCloud<PointT>& output,
-                          double hole_rate);
-    virtual void flatPole(pcl::PointCloud<PointT>& output,
-                          double hole_rate);
-    virtual void addPole(pcl::PointCloud<PointT>& output,
-                         const Eigen::Vector3f& center,
-                         const double width,
-                         const double height);
-  private:
-    
-  };
+  jsk_footstep_msgs::Footstep footstepFromEigenPose(Eigen::Affine3f pose);
+  visualization_msgs::Marker footstepToMarker(const jsk_footstep_msgs::Footstep& footstep, const std_msgs::Header& header);
+  visualization_msgs::MarkerArray footstepArrayToMarkerArray(const jsk_footstep_msgs::FootstepArray& footstep_array);
 }
 
 #endif
