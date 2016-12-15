@@ -21,7 +21,11 @@
 ;;        (qp-solver #'solve-octave-qp))
         (qp-solver #'solve-qpoases-qp)
         (check-status t)
-        (min-inequality-violation-weight) (min-inequality-violation-weight-vector))
+        (solve-qp-mode :qp)
+        (min-inequality-violation-weight) (min-inequality-violation-weight-vector)
+        (equality-error-weight) (equality-error-weight-vector) ;; equality-error-weight is for example 1e8
+        (additional-inequality-matrix) (additional-inequality-min-vector)
+        )
   "Wrench distribution function."
   (let* (;; inequality
          (inequality-matrix (apply #'concatenate-matrix-diagonal contact-constraint-matrix-list))
@@ -39,6 +43,7 @@
          (eval-coeff-vector (instantiate float-vector (length wrench-optimize-weight-vector)))
          (state-dim (array-dimension inequality-matrix 1))
          (use-min-inequality-violation-p (or min-inequality-violation-weight min-inequality-violation-weight-vector))
+         (use-equality-error-p (or equality-error-weight equality-error-weight-vector))
          (state-min-vector))
     (when use-min-inequality-violation-p
       (let* ((ineq-dim (length inequality-min-vector))
@@ -55,20 +60,42 @@
               state-min-vector (concatenate float-vector
                                             (fill (instantiate float-vector state-dim) -1e35)
                                             (instantiate float-vector ineq-dim)))))
+    ;; Use equality error.
+    ;;   For ex, Ax = b => (Ax - b)^T W (Ax - b) in evaluation function
+    (when use-equality-error-p
+      (let* ((equality-error-weight-matrix
+              (if equality-error-weight-vector
+                  (diagonal equality-error-weight-vector)
+                (scale-matrix equality-error-weight (unit-matrix (array-dimension equality-matrix 0)))))
+             (G^TW (m* (transpose equality-matrix) equality-error-weight-matrix)))
+        (setq eval-weight-matrix (m+
+                                  (m* G^TW equality-matrix)
+                                  eval-weight-matrix)
+              eval-coeff-vector (v+
+                                 (scale -1 (transform G^TW equality-vector))
+                                 eval-coeff-vector
+                                 ))))
     (let ((ret
            (apply qp-solver
                   :initial-state initial-state
                   :eval-weight-matrix eval-weight-matrix
                   :eval-coeff-vector eval-coeff-vector
-                  :equality-matrix equality-matrix
-                  :equality-vector equality-vector
-                  :inequality-matrix inequality-matrix
-                  :inequality-min-vector inequality-min-vector
+                  :inequality-matrix (if additional-inequality-matrix (concatenate-matrix-column inequality-matrix additional-inequality-matrix) inequality-matrix)
+                  :inequality-min-vector (if additional-inequality-min-vector (concatenate float-vector inequality-min-vector additional-inequality-min-vector) inequality-min-vector)
                   :check-status check-status
+                  :solve-qp-mode solve-qp-mode
                   :debug debug
-                  (if use-min-inequality-violation-p
-                      (list :state-min-vector state-min-vector))
+                  (append
+                   (if use-min-inequality-violation-p
+                       (list :state-min-vector state-min-vector))
+                   (unless use-equality-error-p
+                     (list :equality-matrix equality-matrix
+                           :equality-vector equality-vector)
+                     ))
                   )))
+      (when (and use-equality-error-p ret (> (distance (transform equality-matrix ret) equality-vector) 1e-4)) ;; [N], [Nm]
+        (when debug (warn ";; too large equality error in wrench torque opt ~A~%" (distance (transform equality-matrix ret) equality-vector)))
+        (setq ret nil))
       (if ret
           (list :wrench-list (send robot :wrench-vector->wrench-list
                                    (if use-min-inequality-violation-p (subseq ret 0 state-dim) ret))))
@@ -187,6 +214,9 @@
 ;;        (qp-solver #'solve-eiquadprog))
 ;;        (qp-solver #'solve-octave-qp))
         (qp-solver #'solve-qpoases-qp)
+        (solve-qp-mode :qp)
+        (equality-error-weight) (equality-error-weight-vector) ;; equality-error-weight is for example 1e8
+        (additional-inequality-matrix) (additional-inequality-min-vector)
         (check-status t))
   "Wrench + torque distribution function."
   (let* ((contact-matrix (apply #'concatenate-matrix-diagonal contact-constraint-matrix-list))
@@ -237,7 +267,8 @@
                                 (m* tq-weight-matrix jacobi^T)))
          (state-dim (array-dimension contact-matrix 1))
          (state-min-vector)
-         (use-min-inequality-violation-p (or min-inequality-violation-weight min-inequality-violation-weight-vector)))
+         (use-min-inequality-violation-p (or min-inequality-violation-weight min-inequality-violation-weight-vector))
+         (use-equality-error-p (or equality-error-weight equality-error-weight-vector)))
     (when use-min-inequality-violation-p
       (let* ((ineq-dim (length inequality-min-vector))
              (violation-state-weight-matrix
@@ -253,26 +284,64 @@
               state-min-vector (concatenate float-vector
                                             (fill (instantiate float-vector state-dim) -1e35)
                                             (instantiate float-vector ineq-dim)))))
+    (setq eval-coeff-vector (array-entity eval-coeff-vector)) ;; array->float-vector
+    ;; Use equality error.
+    ;;   For ex, Ax = b => (Ax - b)^T W (Ax - b) in evaluation function
+    (when use-equality-error-p
+      (let* ((equality-error-weight-matrix
+              (if equality-error-weight-vector
+                  (diagonal equality-error-weight-vector)
+                (scale-matrix equality-error-weight (unit-matrix (array-dimension equality-matrix 0)))))
+             (G^TW (m* (transpose equality-matrix) equality-error-weight-matrix)))
+        (setq eval-weight-matrix (m+
+                                  (m* G^TW equality-matrix)
+                                  eval-weight-matrix)
+              eval-coeff-vector (v+
+                                 (scale -1 (transform G^TW equality-vector))
+                                 eval-coeff-vector
+                                 ))))
     (let* ((ret (apply
                  qp-solver
                  :initial-state initial-state
                  :eval-weight-matrix eval-weight-matrix
-                 :eval-coeff-vector (array-entity eval-coeff-vector)
-                 :inequality-matrix inequality-matrix
-                 :inequality-min-vector inequality-min-vector
-                 :equality-matrix equality-matrix
-                 :equality-vector equality-vector
+                 :eval-coeff-vector eval-coeff-vector
+                 :inequality-matrix (if additional-inequality-matrix (concatenate-matrix-column inequality-matrix additional-inequality-matrix) inequality-matrix)
+                 :inequality-min-vector (if additional-inequality-min-vector (concatenate float-vector inequality-min-vector additional-inequality-min-vector) inequality-min-vector)
                  :check-status check-status
+                 :solve-qp-mode solve-qp-mode
                  :debug debug
-                 (if use-min-inequality-violation-p
-                     (list :state-min-vector state-min-vector))
+                 (append
+                  (if use-min-inequality-violation-p
+                      (list :state-min-vector state-min-vector))
+                  (unless use-equality-error-p
+                    (list :equality-matrix equality-matrix
+                          :equality-vector equality-vector)))
                  )))
+      (when (and use-equality-error-p ret (> (distance (transform equality-matrix ret) equality-vector) 1e-4)) ;; [N], [Nm]
+        (when debug (warn ";; too large equality error in wrench torque opt ~A~%" (distance (transform equality-matrix ret) equality-vector)))
+        (setq ret nil))
       (if ret
           (let ((ret-wrench (if use-min-inequality-violation-p (subseq ret 0 state-dim) ret)))
             (list :wrench-list (send robot :wrench-vector->wrench-list ret-wrench)
                   :torque-vector (v- inertial-torque (transform jacobi^T ret-wrench)))))
       )))
 
+(defun wrench-distribute-from-total-wrench-and-given-wrench
+  (ungiven-wrench-contact-coords-list
+   given-wrench-contact-coords-list
+   given-wrench-list
+   &key (robot)
+        (contact-constraint-matrix-list)
+        (contact-constraint-vector-list))
+  (wrench-distribute-from-total-wrench
+   ungiven-wrench-contact-coords-list
+   contact-constraint-matrix-list
+   :robot robot
+   :total-wrench (v- (concatenate float-vector (send (car (send robot :links)) :force) (send (car (send robot :links)) :moment))
+                     (transform (send robot :calc-grasp-matrix (send-all given-wrench-contact-coords-list :worldpos))
+                                (apply #'concatenate float-vector given-wrench-list)))
+   :contact-constraint-vector-list contact-constraint-vector-list)
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Classes and functions to represent contact constraints
@@ -438,6 +507,74 @@
    )
   )
 
+(defclass polygon-cop-contact-constraint
+  :super contact-constraint
+  :slots (contact-face contact-face-coords)
+  )
+
+(defmethod polygon-cop-contact-constraint
+  (:init
+   (tmp-contact-face)
+  "Calc COP constraint with polygon contact region.
+   contact-face is face class instance of contact region
+   This class assumes that contact-face is vertical with z-axis."
+  (setq contact-face tmp-contact-face)
+  (let* ((x-vec (normalize-vector (v- (send (car (send contact-face :edges)) :direction))))
+         (z-vec (v- (send contact-face :normal)))
+         (y-vec (normalize-vector (v* z-vec x-vec)))
+         )
+    ;; x is parallel to first edge, z is parallel to face normal
+    (setq contact-face-coords (make-coords :pos (cadr (send contact-face :centroid)) :rot (transpose (matrix x-vec y-vec z-vec))))
+    )
+  (setq constraint-param-list
+        (calc-constraint-param-list-for-polygon-cop
+         contact-face contact-face-coords))
+  (send-super :init)
+  )
+  (:gen-drawing-object
+   ()
+   (setq drawing-object
+         (make-prism
+          (butlast
+           (mapcar #'(lambda (p) (concatenate float-vector (subseq p 0 2) (float-vector 0)))
+                   (mapcar #'(lambda (p) (send contact-face-coords :inverse-transform-vector p))
+                           (send contact-face :vertices))))
+          1))
+   (send drawing-object :put :draw-on-args (list :color #f(0 0 1) :width 3))
+   )
+  )
+
+(defclass symmetric-friction-polycone-contact-constraint
+  :super contact-constraint
+  :slots (mu div offset-angle)
+  )
+
+(defmethod symmetric-friction-polycone-contact-constraint
+  (:init
+   (tmp-mu &key ((:div dv) 4) ((:offset-angle oa) (/ pi dv)))
+  "Calc constraint param for friction constraint with symmetric polycone.
+   mu is friction coefficient.
+   div is friction polycone division number.
+   This function assumes that top point of polygon is origin and direction of polycone is z-axis"
+  (setq mu tmp-mu div dv offset-angle oa)
+  (setq constraint-param-list
+        (calc-constraint-param-list-for-symmetric-friction-polycone
+         mu :div div))
+  (send-super :init)
+  )
+  (:gen-drawing-object
+   (&key (z-length 200))
+   (setq drawing-object
+         (make-cone
+          (float-vector 0 0 0)
+          (mapcar #'(lambda (x) (float-vector (* z-length (elt x 0)) (* z-length (elt x 1)) z-length))
+                  (car (calc-vertices-directions-for-regular-polygon mu div :offset-angle offset-angle)))
+          ))
+   (send drawing-object :worldcoords)
+   (send drawing-object :put :draw-on-args (list :color #f(1 1 1) :width 3))
+   )
+  )
+
 (defclass norm-contact-constraint
   :super contact-constraint
   :slots (norm-axis)
@@ -479,13 +616,13 @@
 
 (defmethod 2D-translational-sliding-contact-constraint
   (:init
-   (tmp-mu-trans &key ((:norm-axis tmp-norm-axis) :fz) ((:slide-axis tmp-slide-axis) :x))
+   (tmp-mu-trans &key ((:norm-axis tmp-norm-axis) :fz) ((:slide-axis tmp-slide-axis) :fx))
    "Calc conatraint param list for translational sliding.
    mu-trans is friction coefficient.
    norm-axis is axis of normal (such as fz).
-   slide-axis is axis with sign of sliding direction (such as x, y, -x, or -y).
+   slide-axis is axis with sign of sliding direction (such as fx, fy, -fx, or -fy).
    This constraint contains friction constraint for the other direction.
-   e.g. When slide-axis is :x, this cnstarint consists of sliding constraint of x and friction constraint of y."
+   e.g. When slide-axis is :fx, this cnstarint consists of sliding constraint of x and friction constraint of y."
    (setq mu-trans tmp-mu-trans norm-axis tmp-norm-axis slide-axis tmp-slide-axis)
    (setq constraint-param-list
          (let ((ret
@@ -502,21 +639,40 @@
    (setq drawing-object
          (make-prism
           (cond
-           ((or (equal slide-axis :x) (equal slide-axis :-x))
+           ((or (equal slide-axis :fx) (equal slide-axis :-fx))
             (list
              (float-vector 0 0 0)
-             (float-vector (* -1 (axis->sgn slide-axis) mu-trans z-length) (* 1 mu-trans z-length) z-length)
-             (float-vector (* -1 (axis->sgn slide-axis) mu-trans z-length) (* -1 mu-trans z-length) z-length))
+             (float-vector (* -1 (force-axis->sgn slide-axis) mu-trans z-length) (* 1 mu-trans z-length) z-length)
+             (float-vector (* -1 (force-axis->sgn slide-axis) mu-trans z-length) (* -1 mu-trans z-length) z-length))
             )
-           ((or (equal slide-axis :y) (equal slide-axis :-y))
+           ((or (equal slide-axis :fy) (equal slide-axis :-fy))
             (list
              (float-vector 0 0 0)
-             (float-vector (* 1 mu-trans z-length) (* -1 (axis->sgn slide-axis) mu-trans z-length) z-length)
-             (float-vector (* -1 mu-trans z-length) (* -1 (axis->sgn slide-axis) mu-trans z-length) z-length))
+             (float-vector (* 1 mu-trans z-length) (* -1 (force-axis->sgn slide-axis) mu-trans z-length) z-length)
+             (float-vector (* -1 mu-trans z-length) (* -1 (force-axis->sgn slide-axis) mu-trans z-length) z-length))
             ))
           1))
    (send drawing-object :put :draw-on-args (list :color #f(1 1 1) :width 3))
    )
+  )
+
+(defclass rotational-sliding-contact-constraint
+  :super contact-constraint
+  :slots (mu-rot norm-axis slide-axis)
+  )
+
+(defmethod rotational-sliding-contact-constraint
+  (:init
+   (tmp-mu-rot tmp-norm-axis &key ((:slide-axis tmp-slide-axis) :nz))
+   "Calc conatraint param list for rotational friction.
+   mu-rot is friction coefficient.
+   norm-axis is axis of normal (such as fz).
+   slide-axis is axis with sign of sliding direction (such as nz or -nz)."
+   (setq mu-rot tmp-mu-rot norm-axis tmp-norm-axis slide-axis tmp-slide-axis)
+   (setq constraint-param-list
+         (calc-constraint-param-list-for-rotational-sliding
+          mu-rot norm-axis slide-axis))
+   (send-super :init))
   )
 
 (defclass default-contact-constraint
@@ -529,6 +685,7 @@
    (&key (mu-margin-ratio 1.0) (cop-margin-ratio 1.0)
          (mu-trans) (mu-rot) (slide-axis)
          (l-max-x) (l-max-y) (l-min-x) (l-min-y)
+         (contact-face)
          (name) (max-fz))
    "Calc default constraint matrix.
     This is include 2D friction force, 1D rotational friction moment, non-negative normal force, and 2D-COP constraint,
@@ -541,12 +698,16 @@
          (append
           (list
            ;; friction
-           (if slide-axis
+           (if (force-axis->translationp slide-axis)
                (instance 2D-translational-sliding-contact-constraint :init (* mu-margin-ratio mu-trans) :slide-axis slide-axis)
              (instance 2D-translational-friction-contact-constraint :init (* mu-margin-ratio mu-trans)))
-           (instance rotational-friction-contact-constraint :init (* mu-margin-ratio mu-rot) :fz)
+           (if (force-axis->rotationp slide-axis)
+               (instance rotational-sliding-contact-constraint :init (* mu-margin-ratio mu-rot) :fz :slide-axis slide-axis)
+             (instance rotational-friction-contact-constraint :init (* mu-margin-ratio mu-rot) :fz))
            ;; cop
-           (instance 2D-cop-contact-constraint :init (* cop-margin-ratio l-max-x) (* cop-margin-ratio l-min-x) (* cop-margin-ratio l-max-y) (* cop-margin-ratio l-min-y))
+           (if contact-face
+               (instance polygon-cop-contact-constraint :init contact-face)
+             (instance 2D-cop-contact-constraint :init (* cop-margin-ratio l-max-x) (* cop-margin-ratio l-min-x) (* cop-margin-ratio l-max-y) (* cop-margin-ratio l-min-y)))
            ;; fz
            (instance norm-contact-constraint :init :fz)
            )
@@ -649,33 +810,59 @@
            (list :matrix (apply #'append (mapcar #'(lambda (x) (cadr (memq :matrix x))) ret))
                  :vector (apply #'append (mapcar #'(lambda (x) (cadr (memq :vector x))) ret)))))
    (send-super :init :name name))
+  (:gen-drawing-object
+   (&key (object-scale 0.1))
+   (let ((top (float-vector 0 0 (elt max-wrench 2)))
+         (middles (list (float-vector (elt max-wrench 0) 0 0)
+                        (float-vector 0 (elt max-wrench 1) 0)
+                        (float-vector (- (elt max-wrench 0)) 0 0)
+                        (float-vector 0 (- (elt max-wrench 1)) 0)))
+         (bottom (float-vector 0 0 (- (elt max-wrench 2))))
+         upper-faces lower-faces)
+     ;; apply object scale
+     (setq top (scale object-scale top))
+     (setq middles (mapcar #'(lambda (x) (list (scale object-scale x))) middles)) ;; middle elements should be list for make-face-from-vertices
+     (setq bottom (scale object-scale bottom))
+     ;; make faces
+     (make-face-from-vertices middles)
+     (setq upper-faces (geometry::make-conic-side-faces (list top) middles :upper)
+           lower-faces (geometry::make-conic-side-faces (list bottom) (reverse middles) :lower))
+     ;; make body instance
+     (setq drawing-object (send (instantiate *body-class*) :init :faces (flatten (append upper-faces lower-faces)) :approximated t))
+     (send drawing-object :put :draw-on-args (list :color #f(1 1 1) :width 2))
+     ))
   )
 
 (defun force-axis->index (ax)
   (case ax
     (:fx 0) (:fy 1) (:fz 2)
     (:nx 3) (:ny 4) (:nz 5)
+    (:-fx 0) (:-fy 1) (:-fz 2)
+    (:-nx 3) (:-ny 4) (:-nz 5)
     )
   )
 
-(defun axis->index (ax)
+(defun force-axis->sgn (ax)
   (case ax
-    (:x 0) (:y 1) (:z 2)
-    (:-x 0) (:-y 1) (:-z 2)
+    (:fx 1) (:fy 1) (:fz 1)
+    (:nx 1) (:ny 1) (:nz 1)
+    (:-fx -1) (:-fy -1) (:-fz -1)
+    (:-nx -1) (:-ny -1) (:-nz -1)
     )
   )
 
-(defun axis->sgn (ax)
-  (case ax
-    (:x 1) (:y 1) (:z 1)
-    (:-x -1) (:-y -1) (:-z -1)
-    )
+(defun force-axis->translationp (ax)
+  (memq ax (list :fx :fy :fz :-fx :-fy :-fz))
+  )
+
+(defun force-axis->rotationp (ax)
+  (memq ax (list :nx :ny :nz :-nx :-ny :-nz))
   )
 
 (defun sliding-axis->no-sliding-axis (ax)
   (case ax
-    (:x :fy) (:y :fx)
-    (:-x :fy) (:-y :fx)
+    (:fx :fy) (:fy :fx)
+    (:-fx :fy) (:-fy :fx)
     )
   )
 
@@ -801,6 +988,31 @@
     (list :matrix ret :vector (list 0 0))
     ))
 
+(defun calc-constraint-param-list-for-polygon-cop
+  (contact-face contact-face-coords)
+  "Calc constraint param for COP constraint with polygon contact region.
+   contact-face is face class instance of contact region
+   contact-face-coords is coordinate of contact face (x is parallel to first edge, z is parallel to face normal)
+   This function assumes that contact-face is vertical with z-axis."
+  (let* ((edge-num (length (send contact-face :edges)))
+         (ret (mapcar #'(lambda (x) (make-list 6 :initial-element 0))
+                      (make-list edge-num))))
+    (dotimes (i edge-num)
+      (let* ((tmp-edge (elt (send contact-face :edges) i)) ;; be carefull that edge is class name
+             (world-edge-dir (send tmp-edge :direction))
+             (local-edge-dir (send contact-face-coords :inverse-rotate-vector world-edge-dir))
+             (world-edge-point (send tmp-edge :point 0)) ;; [mm]
+             (local-edge-point (scale 1e-3 (send contact-face-coords :inverse-transform-vector world-edge-point))) ;; [m]
+             )
+        (setf (elt (elt ret i) 2) (- (* (elt local-edge-point 0) (elt local-edge-dir 1)) (* (elt local-edge-point 1) (elt local-edge-dir 0)))) ;; fz
+        (setf (elt (elt ret i) 3) (elt local-edge-dir 0)) ;; nx
+        (setf (elt (elt ret i) 4) (elt local-edge-dir 1)) ;; ny
+        (when (< (elt (elt ret i) 2) 0) ;; inequality is flipped depending on edge direction relative to centroid
+          (setf (elt ret i) (mapcar #'(lambda (x) (- x)) (elt ret i))))
+        ))
+    (list :matrix ret :vector (make-list edge-num :initial-element 0))
+    ))
+
 (defun calc-constraint-param-list-for-translational-sliding
   (mu-trans norm-axis slide-axis)
   "Calc conatraint param list for translational sliding.
@@ -809,8 +1021,8 @@
    slide-axis is axis of sliding direction (such as fx or fy)."
   (let ((ret (mapcar #'(lambda (x) (make-list 6 :initial-element 0)) '(0 1)))
         (norm-idx (force-axis->index norm-axis))
-        (slide-idx (axis->index slide-axis))
-        (slide-sgn (axis->sgn slide-axis))
+        (slide-idx (force-axis->index slide-axis))
+        (slide-sgn (force-axis->sgn slide-axis))
         )
     (setf (elt (car ret) norm-idx) mu-trans)
     (setf (elt (cadr ret) norm-idx) (- mu-trans))
@@ -821,6 +1033,90 @@
            (setf (elt (car ret) slide-idx) -1)
            (setf (elt (cadr ret) slide-idx) 1)))
     (list :matrix ret :vector (list 0 0))
+    ))
+
+(defun calc-constraint-param-list-for-rotational-sliding
+  (mu-rot norm-axis slide-axis)
+  "Calc conatraint param list for rotational sliding.
+   mu-rot is friction coefficient.
+   norm-axis is axis of normal (such as fz).
+   slide-axis is axis of sliding direction (such as nz)."
+  (let* ((ret (mapcar #'(lambda (x) (make-list 6 :initial-element 0)) '(0 1)))
+         (norm-idx (force-axis->index norm-axis))
+         (slide-idx (force-axis->index slide-axis))
+         (slide-sgn (force-axis->sgn slide-axis))
+         )
+    (setf (elt (car ret) norm-idx) mu-rot)
+    (setf (elt (cadr ret) norm-idx) (- mu-rot))
+    (cond ((> slide-sgn 0)
+           (setf (elt (car ret) slide-idx) 1)
+           (setf (elt (cadr ret) slide-idx) -1))
+          ((< slide-sgn 0)
+           (setf (elt (car ret) slide-idx) -1)
+           (setf (elt (cadr ret) slide-idx) 1)))
+    (list :matrix ret :vector (list 0 0))
+    ))
+
+(defun calc-vertices-directions-for-regular-polygon
+  (radius div &key (debug-view nil) (offset-angle 0))
+  "Calculate vertices and edge directions for a regular polygon
+   inscribed within a circle with given radius. 
+   radius is given radius [mm].
+   div is division number.
+   offset-angle is angle of offset for initial point."
+  (let ((pret) (dret) (dtheta (/ 2pi div)))
+    ;; Vertices
+    (dotimes (i div)
+      (let ((angle (+ offset-angle (* i dtheta))))
+        (push (float-vector (* radius (cos angle)) (* radius (sin angle)) 0) pret)))
+    (setq pret (reverse pret))
+    ;; Directions
+    ;; (setq dret
+    ;;       (mapcar #'(lambda (p0 p1) (normalize-vector (v- p1 p0)))
+    ;;               pret
+    ;;               (append (cdr pret) (list (car pret)))))
+    (dotimes (i div)
+      (let ((angle (+ offset-angle (* (+ i 0.5) dtheta)))
+            (tmp (* 2 radius (sin (* 0.5 dtheta)))))
+        (push (normalize-vector (float-vector (* -1 tmp (sin angle)) (* tmp (cos angle)) 0)) dret)))
+    (setq dret (reverse dret))
+    ;; debug
+    (when debug-view
+      (let ((nret
+             (mapcar #'(lambda (p0 p1) (distance p1 p0))
+                     pret
+                     (append (cdr pret) (list (car pret))))))
+        (mapcar #'(lambda (p d n)
+                    (send *viewer* :draw-arrow p (v+ p (scale n d))))
+                pret dret nret)
+        (send-all pret :draw-on :flush nil :color #f(1 0 0) :size 5)
+        (send *viewer* :viewsurface :flush)
+        ))
+    ;;(list :vertices pret :directions dret)
+    (list pret dret)
+    ))
+
+(defun calc-constraint-param-list-for-symmetric-friction-polycone
+  (mu &key (div 4) (offset-angle (/ pi div)))
+  "Calc constraint param for friction constraint with symmetric polycone.
+   mu is friction coefficient.
+   div is friction polycone division number.
+   This function assumes that top point of polygon is origin and direction of polycone is z-axis"
+  (let* ((ret (mapcar #'(lambda (x) (make-list 6 :initial-element 0))
+                      (make-list div))))
+    (let* (vertices directions)
+      (multiple-value-setq
+       (vertices directions)
+       (calc-vertices-directions-for-regular-polygon mu div :offset-angle offset-angle))
+      (dotimes (i div)
+        (let ((d (elt directions i)) (p (elt vertices i)))
+          (setf (elt (elt ret i) 0) (- (elt d 1)))
+          (setf (elt (elt ret i) 1) (elt d 0))
+          (setf (elt (elt ret i) 2) (- (* (elt d 1) (elt p 0)) (* (elt d 0) (elt p 1))))
+          (when (< (elt (elt ret i) 2) 0) ;; inequality is flipped depending on edge direction relative to centroid
+            (setf (elt ret i) (mapcar #'(lambda (x) (- x)) (elt ret i))))
+          )))
+    (list :matrix ret :vector (make-list div :initial-element 0))
     ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
