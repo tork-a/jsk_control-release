@@ -44,6 +44,7 @@
 #include "jsk_footstep_planner/astar_solver.h"
 #include "jsk_footstep_planner/ann_grid.h"
 #include "jsk_footstep_planner/transition_limit.h"
+#include "jsk_footstep_planner/footstep_parameters.h"
 
 namespace jsk_footstep_planner
 {
@@ -51,13 +52,16 @@ namespace jsk_footstep_planner
   {
   public:
     typedef boost::shared_ptr<FootstepGraph> Ptr;
+    typedef typename boost::function< bool(StatePtr target_state, std::vector<StatePtr> &) > SuccessorFunction;
+    typedef typename boost::function< double(StatePtr, StatePtr, double) > PathCostFunction;
+
     FootstepGraph(const Eigen::Vector3f& resolution,
                   const bool use_pointcloud_model = false,
                   const bool lazy_projection = true,
                   const bool local_movement = false,
                   const bool use_obstacle_model = false):
       max_successor_distance_(0.0), max_successor_rotation_(0.0),
-      pos_goal_thr_(0.1), rot_goal_thr_(0.17), publish_progress_(false),
+      publish_progress_(false),
       resolution_(resolution),
       use_pointcloud_model_(use_pointcloud_model),
       lazy_projection_(lazy_projection),
@@ -68,14 +72,7 @@ namespace jsk_footstep_planner
       obstacle_tree_model_(new pcl::KdTreeFLANN<pcl::PointXYZ>),
       tree_model_2d_(new pcl::search::Octree<pcl::PointNormal>(0.2)),
       grid_search_(new ANNGrid(0.05)),
-      local_move_x_(0.1), local_move_y_(0.05), local_move_theta_(0.2),
-      local_move_x_num_(3), local_move_y_num_(3), local_move_theta_num_(3),
-      plane_estimation_max_iterations_(100),
-      plane_estimation_min_inliers_(100),
-      plane_estimation_outlier_threshold_(0.02),
-      support_check_x_sampling_(3),
-      support_check_y_sampling_(3),
-      support_check_vertex_neighbor_threshold_(0.02),
+      parameters_(),
       zero_state_(new FootstepState(0,
                                     Eigen::Affine3f::Identity(),
                                     Eigen::Vector3f::UnitX(),
@@ -83,9 +80,19 @@ namespace jsk_footstep_planner
       perception_duration_(0.0)
     {
     }
-    virtual std::vector<StatePtr> successors(StatePtr target_state);
+    virtual std::vector<StatePtr> successors(StatePtr target_state) {
+      std::vector<StatePtr> ret;
+      successor_func_(target_state, ret);
+      return ret;
+    }
+
     virtual bool isGoal(StatePtr state);
-    
+
+    virtual double pathCost(StatePtr from, StatePtr to, double prev_cost)
+    {
+      return path_cost_func_(from, to, prev_cost);
+    }
+
     /**
      * @brief
      * return True if current_state collides with obstacle.
@@ -125,6 +132,9 @@ namespace jsk_footstep_planner
      */
     virtual std::string infoString() const;
     
+    bool finalizeSteps(const StatePtr &last_1_Step, const StatePtr &lastStep,
+                       std::vector<StatePtr> &finalizeSteps);
+
     virtual FootstepState::Ptr getGoal(int leg)
     {
       if (leg == jsk_footstep_msgs::Footstep::LEFT) {
@@ -147,11 +157,6 @@ namespace jsk_footstep_planner
       return max_successor_rotation_;
     }
 
-    virtual void setObstacleResolution(double res)
-    {
-      obstacle_resolution_ = res;
-    }
-    
     virtual void setProgressPublisher(ros::NodeHandle& nh, std::string topic)
     {
       publish_progress_ = true;
@@ -189,20 +194,8 @@ namespace jsk_footstep_planner
     virtual bool usePointCloudModel() const { return use_pointcloud_model_; }
     virtual bool lazyProjection()  const { return lazy_projection_; }
     virtual bool localMovement() const { return local_movement_; }
-    virtual void setPositionGoalThreshold(double x) { pos_goal_thr_ = x; }
-    virtual void setRotationGoalThreshold(double x) { rot_goal_thr_ = x; }
-    virtual void setLocalXMovement(double x) { local_move_x_ = x; }
-    virtual void setLocalYMovement(double x) { local_move_y_ = x; }
-    virtual void setLocalThetaMovement(double x) { local_move_theta_ = x; }
-    virtual void setLocalXMovementNum(size_t n) { local_move_x_num_ = n; }
-    virtual void setLocalYMovementNum(size_t n) { local_move_y_num_ = n; }
-    virtual void setLocalThetaMovementNum(size_t n) { local_move_theta_num_ = n; }
-    virtual void setPlaneEstimationMaxIterations(int n) { plane_estimation_max_iterations_ = n; }
-    virtual void setPlaneEstimationMinInliers(int n) { plane_estimation_min_inliers_ = n; }
-    virtual void setPlaneEstimationOutlierThreshold(double d) { plane_estimation_outlier_threshold_ = d; }
-    virtual void setSupportCheckXSampling(int n) { support_check_x_sampling_ = n; }
-    virtual void setSupportCheckYSampling(int n) { support_check_y_sampling_ = n; }
-    virtual void setSupportCheckVertexNeighborThreshold(double d) { support_check_vertex_neighbor_threshold_ = d; }
+
+    virtual void setParameters (FootstepParameters &p) { parameters_ = p; }
     virtual void setTransitionLimit(TransitionLimit::Ptr limit) { transition_limit_ = limit; }
     virtual TransitionLimit::Ptr getTransitionLimit() { return transition_limit_; }
     virtual void setGlobalTransitionLimit(TransitionLimit::Ptr limit) { global_transition_limit_ = limit; }
@@ -214,7 +207,17 @@ namespace jsk_footstep_planner
     virtual std::vector<FootstepState::Ptr> localMoveFootstepState(FootstepState::Ptr in);
     virtual void setCollisionBBoxOffset(const Eigen::Affine3f& offset) { collision_bbox_offset_ = offset; }
     virtual void setCollisionBBoxSize(const Eigen::Vector3f& size) { collision_bbox_size_ = size; }
-    
+
+    virtual void setSuccessorFunction(SuccessorFunction s) {
+      successor_func_ = s;
+    }
+    virtual void setPathCostFunction(PathCostFunction p) {
+      path_cost_func_ = p;
+    }
+    bool successors_original(StatePtr target_state, std::vector<FootstepGraph::StatePtr> &ret);
+    double path_cost_original(StatePtr from, StatePtr to, double prev_cost) {
+      return prev_cost + 1;
+    }
   protected:
     pcl::PointCloud<pcl::PointNormal>::Ptr pointcloud_model_;
     pcl::PointCloud<pcl::PointXYZ>::Ptr obstacle_model_;
@@ -237,35 +240,23 @@ namespace jsk_footstep_planner
     Eigen::Vector3f collision_bbox_size_;
     double max_successor_distance_;
     double max_successor_rotation_;
-    double pos_goal_thr_;
-    double rot_goal_thr_;
     bool publish_progress_;
+    ros::Publisher pub_progress_;
+    // const params
     const bool use_pointcloud_model_;
     const bool lazy_projection_;
     const bool local_movement_;
     const bool use_obstacle_model_;
+    const Eigen::Vector3f resolution_;
+    // params
     TransitionLimit::Ptr transition_limit_;
     TransitionLimit::Ptr global_transition_limit_;
-    double local_move_x_;
-    double local_move_y_;
-    double local_move_theta_;
-    size_t local_move_x_num_;
-    size_t local_move_y_num_;
-    size_t local_move_theta_num_;
-    double obstacle_resolution_;
-    
-    ros::Publisher pub_progress_;
-    const Eigen::Vector3f resolution_;
+    FootstepParameters parameters_;
 
-    int plane_estimation_max_iterations_;
-    int plane_estimation_min_inliers_;
-    double plane_estimation_outlier_threshold_;
-    int support_check_x_sampling_;
-    int support_check_y_sampling_;
-    double support_check_vertex_neighbor_threshold_;
     ros::WallDuration perception_duration_;
   private:
-
+    SuccessorFunction successor_func_;
+    PathCostFunction  path_cost_func_;
   };
 
   // heuristic function

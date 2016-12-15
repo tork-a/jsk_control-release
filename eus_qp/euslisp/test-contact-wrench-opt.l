@@ -74,6 +74,7 @@
 
 (defun test-wrench-distribute-by-pseudo-inverse
   (&key (limbs '(:rleg :lleg))
+        (equality-error-weight) ;; dummy
         (contact-coords-list (mapcar #'(lambda (l) (send *robot* l :end-coords)) limbs)))
   (let ((ret
          (list :wrench-list
@@ -91,7 +92,8 @@
   (&key (limbs '(:rleg :lleg))
         (contact-coords-list (mapcar #'(lambda (l) (send *robot* l :end-coords)) limbs))
         (contact-constraint-matrix-list)
-        (min-inequality-violation-weight))
+        (min-inequality-violation-weight)
+        (equality-error-weight))
   (unless contact-constraint-matrix-list
     (setq contact-constraint-matrix-list
           (mapcar #'(lambda (c-constraint c-coords)
@@ -103,6 +105,7 @@
           contact-coords-list contact-constraint-matrix-list
           :robot *robot*
           :min-inequality-violation-weight min-inequality-violation-weight
+          :equality-error-weight equality-error-weight
           :contact-constraint-vector-list (send-all (send *robot* :get :contact-constraint-list) :get-constraint-vector))))
     (draw-force-value ret :limbs limbs)
     (send *irtviewer* :viewer :viewsurface :flush)
@@ -113,6 +116,7 @@
         (contact-coords-list (mapcar #'(lambda (l) (send *robot* l :end-coords)) limbs))
         (contact-constraint-matrix-list)
         (min-inequality-violation-weight)
+        (equality-error-weight)
         (func #'wrench-torque-distribute-from-total-wrench-inertial-torque))
   (unless contact-constraint-matrix-list
     (setq contact-constraint-matrix-list
@@ -129,6 +133,7 @@
                        :robot *robot*
                        :contact-constraint-vector-list (send-all (send *robot* :get :contact-constraint-list) :get-constraint-vector)
                        :min-inequality-violation-weight min-inequality-violation-weight
+                       :equality-error-weight equality-error-weight
                        )))
     (draw-force-value ret :union-link-list union-link-list :limbs limbs)
     (send *irtviewer* :viewer :viewsurface :flush)
@@ -137,6 +142,7 @@
 (defun demo-robot-contact-wrench-distribution-common
   (&key (func #'test-wrench-distribute-by-qp) (press-enter-p t) (mu-trans 0.5) (ret-list nil)
         (mu-margin-ratio 1.0) (cop-margin-ratio 1.0)
+        (equality-error-weight (if (boundp '*force-use-equality-error-weight*) 1e8))
         (use-no-contact nil) (use-hand))
   (let ((ret) (limbs))
     (send *robot* :put :contact-constraint-list
@@ -171,7 +177,7 @@
     (if use-hand (send *robot* :arms :shoulder-p :joint-angle -40))
     (send *robot* :fix-leg-to-coords (make-coords))
     (send *irtviewer* :draw-objects)
-    (push (funcall func :limbs limbs) ret)
+    (push (funcall func :limbs limbs :equality-error-weight equality-error-weight) ret)
     (when press-enter-p (format t ";; press enter~%") (read-line))
     (send *robot* :reset-pose)
     (send *robot* :fix-leg-to-coords (make-coords))
@@ -181,14 +187,14 @@
     (if use-hand (send *robot* :arms :shoulder-p :joint-angle -40))
     (send *robot* :move-centroid-on-foot :rleg '(:rleg :lleg))
     (send *irtviewer* :draw-objects)
-    (push (funcall func :limbs limbs) ret)
+    (push (funcall func :limbs limbs :equality-error-weight equality-error-weight) ret)
     (when press-enter-p (format t ";; press enter~%") (read-line))
     (send *robot* :reset-pose)
     (if use-hand (send *robot* :arms :shoulder-p :joint-angle -40))
     (send *robot* :fix-leg-to-coords (make-coords :pos #f(200 200 300)))
     (send *robot* :move-centroid-on-foot :both '(:rleg :lleg))
     (send *irtviewer* :draw-objects)
-    (push (funcall func :limbs limbs) ret)
+    (push (funcall func :limbs limbs :equality-error-weight equality-error-weight) ret)
     (when press-enter-p (format t ";; press enter~%") (read-line))
     (send *robot* :reset-pose)
     (send *robot* :fix-leg-to-coords (make-coords))
@@ -202,7 +208,7 @@
     (if use-hand (send *robot* :arms :shoulder-p :joint-angle -40))
     (send *robot* :move-centroid-on-foot :both '(:rleg :lleg))
     (send *irtviewer* :draw-objects)
-    (push (funcall func :limbs limbs) ret)
+    (push (funcall func :limbs limbs :equality-error-weight equality-error-weight) ret)
     (if ret-list
         (reverse ret)
       (every #'identity (reverse ret)))))
@@ -254,13 +260,16 @@
   (demo-robot-contact-wrench-distribution-common :func #'test-wrench-torque-distribute-by-qp :press-enter-p press-enter-p :ret-list t :use-hand t))
 
 (defun demo-robot-contact-wrench-distribution-all
-  (&key (press-enter-p t))
+  (&key (press-enter-p t) (force-use-equality-error-weight))
   "for all test"
   (let ((ret))
+    (makunbound '*force-use-equality-error-weight*)
+    (if force-use-equality-error-weight (setq *force-use-equality-error-weight* t))
     (dotimes (i (apply #'max (remove-if-not #'numberp (mapcar #'(lambda (x) (let ((str (string-left-trim "DEMO-ROBOT-CONTACT-WRENCH-DISTRIBUTION-" (string x)))) (unless (string= "" str) (read-from-string str)))) (apropos-list 'demo-robot-contact-wrench-distribution)))))  ;; Get max number of demo function
       (format t ";; demo-robot-contact-wrench-distribution-~d~%" (1+ i))
       (push (funcall (eval (read-from-string (format nil "#'demo-robot-contact-wrench-distribution-~d" (1+ i)))) :press-enter-p press-enter-p) ret)
       (when press-enter-p (format t ";; press enter~%") (read-line)))
+    (print (mapcar #'(lambda (x) (not (not x))) ret))
     (every #'identity ret)
     ))
 
@@ -269,7 +278,23 @@
   (warn ";;   (demo-robot-contact-wrench-distribution-~d) ;; ~A~%" (1+ i)
         (documentation (read-from-string (format nil "demo-robot-contact-wrench-distribution-~d" (1+ i))))))
 (warn ";; (demo-robot-contact-wrench-distribution-all)~%")
+(warn ";; (demo-robot-contact-wrench-distribution-all :force-use-equality-error-weight t)~%")
 (warn ";; (test-compare-wrench-torque-calc)~%")
+
+(defun demo-robot-wrench-distribute-from-total-wrench-and-given-wrench
+  ()
+  ;; Currently calculation with contact constraints does not work.
+  (send *robot* :reset-pose)
+  (send *robot* :fix-leg-to-coords (make-coords))
+  (send *robot* :calc-torque :calc-statics-p t) ;; Statics
+  (wrench-distribute-from-total-wrench-and-given-wrench
+   (send *robot* :arms :end-coords)
+   (send *robot* :legs :end-coords)
+   (list (float-vector 0 0 (* (send *robot* :weight) 1e-3 9.8 0.45) 0 0 0)
+         (float-vector 0 0 (* (send *robot* :weight) 1e-3 9.8 0.45) 0 0 0))
+   :robot *robot*)
+   )
+(warn ";; (demo-robot-wrench-distribute-from-total-wrench-and-given-wrench)~%")
 
 (defun calc-diff-wrench
   (tq-wr-list1 tq-wr-list2)
@@ -518,7 +543,7 @@
   (set-cbox-pose-neutral)
   (let ((ret
          (demo-cbox-wrench-calc-comon
-          (list (instance 2D-translational-sliding-contact-constraint :init 0.5 :slide-axis :x))
+          (list (instance 2D-translational-sliding-contact-constraint :init 0.5 :slide-axis :fx))
           (list (send *cbox* :worldcoords))
           :min-inequality-violation-weight min-inequality-violation-weight
           )))
@@ -540,7 +565,7 @@
    (list (instance default-contact-constraint
                    :init
                    :mu-trans 0.5 :mu-rot 0.05
-                   :slide-axis :-y
+                   :slide-axis :-fy
                    :l-min-x -150 :l-max-x 150
                    :l-min-y -150 :l-max-y 150)
          (instance default-contact-constraint
@@ -560,6 +585,51 @@
    (list (send *cbox* :get :face-coords-2))
    ))
 
+(defun demo-cbox-wrench-calc-18
+  ()
+  "Demo for cbox wrench calculation by polygon-cop-contact-constraint. cbox is neutral pos rot."
+  (set-cbox-pose-neutral)
+  (demo-cbox-wrench-calc-comon
+   (list (instance polygon-cop-contact-constraint :init (elt (send *cbox* :faces) 1))) ;; bottom face
+   (list (send *cbox* :worldcoords))
+   ))
+
+(defun demo-cbox-wrench-calc-19
+  ()
+  "Demo for cbox wrench calculation by symmetric-friction-polycone-contact-constraint. cbox is neutral pos rot."
+  (set-cbox-pose-neutral)
+  (demo-cbox-wrench-calc-comon
+   (list (instance symmetric-friction-polycone-contact-constraint :init 0.5 :div 16))
+   (list (send *cbox* :worldcoords))
+   ))
+
+(defun demo-cbox-wrench-calc-20
+  ()
+  "Demo for cbox wrench calculation by rotational-sliding-contact-constraint. cbox is neutral pos rot."
+  (set-cbox-pose-neutral)
+  (let ((ret (demo-cbox-wrench-calc-comon
+              (list (instance rotational-sliding-contact-constraint :init 0.5 :fz :slide-axis :nz))
+              (list (send *cbox* :worldcoords))
+              )))
+    (not ret))
+  )
+
+(defun demo-cbox-wrench-calc-21
+  ()
+  "Demo for cbox wrench calculation by default-contact-constraint. cbox is neutral pos rot. cbox is sliding in the -y direction."
+  (set-cbox-pose-neutral)
+  (demo-cbox-wrench-calc-comon
+   (list (instance default-contact-constraint
+                   :init
+                   :mu-trans 0.5 :mu-rot 0.5
+                   :slide-axis :nz
+                   :l-min-x -150 :l-max-x 150
+                   :l-min-y -150 :l-max-y 150)
+         (instance 6d-min-max-contact-constraint
+                   :init
+                   (float-vector 100 100 100 100 100 100)))
+   (list (send *cbox* :worldcoords) (send *cbox* :get :face-coords-2))
+   ))
 
 (defun demo-cbox-wrench-calc-all
   (&key (press-enter-p t))
@@ -577,6 +647,113 @@
   (warn ";;   (demo-cbox-wrench-calc-~d) ;; ~A~%" (1+ i)
         (documentation (read-from-string (format nil "demo-cbox-wrench-calc-~d" (1+ i))))))
 (warn ";;   (demo-cbox-wrench-calc-all) ;; for all tests~%")
+
+;; test for calc-constraint-param-list-for-polygon-cop and calc-constraint-param-list-for-symmetric-friction-polycone
+(defun test-cop-polygon-constraint
+  (&key (max-itr 1000) (debug-view))
+  (let* ((vertices-size (+ 1 (random 10)))
+         (aface-vertices
+          (quickhull
+           (remove-duplicates
+            (append
+             (mapcar #'(lambda (x) (float-vector (random 20.0) (random 20.0) 0.0)) (make-list vertices-size))
+             (mapcar #'(lambda (x) (float-vector (- (random 20.0)) (random 20.0) 0.0)) (make-list vertices-size))
+             (mapcar #'(lambda (x) (float-vector (- (random 20.0)) (- (random 20.0)) 0.0)) (make-list vertices-size))
+             (mapcar #'(lambda (x) (float-vector (random 20.0) (- (random 20.0)) 0.0)) (make-list vertices-size)))
+            :test #'eps-v=)))
+         ret fc cc)
+    ;; Initialize
+    (setq vertices-size (length aface-vertices))
+    (setq fc (instance face :init :vertices aface-vertices))
+    (setq cc (calc-constraint-param-list-for-polygon-cop fc (make-coords)))
+    (format t ";; div = ~A, vertices = ~A~%" vertices-size aface-vertices)
+    (when debug-view
+      (objects (list (make-cube 50 50 10)))
+      (send *irtviewer* :draw-objects :flush nil))
+    (dotimes (i max-itr)
+      (let* ((pp (float-vector (- (random 50.0) 25.0) (- (random 50.0) 25.0) 0.0))
+             (fz (+ 1e-5 (random 300.0)))
+             ;; Check whether pp is included in fc face using :insidep method.
+             (fp (send (instance polygon2d :init (mapcar #'(lambda (x) (subseq x 0 2)) (cdr (send fc :vertices))))
+                       :insidep (float-vector (elt pp 0) (elt pp 1))))
+             ;; Check whether pp is included in contact-constraint
+             (constraint-matrix (make-matrix (length (cadr (memq :matrix cc))) 6 (cadr (memq :matrix cc))))
+             (mp (mapcar #'(lambda (x y) (not (< x y)))
+                         (concatenate cons (transform constraint-matrix (float-vector 0 0 fz (* 1e-3 fz (elt pp 1)) (* fz -1e-3 (elt pp 0)) 0)))
+                         (cadr (memq :vector cc)))))
+        ;; Debug
+        (when debug-view
+          (if (every #'identity mp)
+              (send pp :draw-on :flush nil :color #f(0 1 0) :size 2)
+            (send pp :draw-on :flush nil :color #f(0 0 1) :size 2)))
+        (unless (eq :border fp) ;; neglect border
+          (when debug-view
+            (format t ";; (insidep = constraint?) = ~A, pos = ~A[mm], fz = ~A[N], insidep = ~A, constraint = ~A~%"
+                    (eq fp (every #'identity mp)) pp fz fp (every #'identity mp)))
+          (push (eq fp (every #'identity mp)) ret)
+          (unless (eq fp (every #'identity mp))
+            (when debug-view
+              (send pp :draw-on :flush t :color #f(1 0 0) :size 2))
+            (error ";; err~%")
+            ))
+        ))
+    (when debug-view
+      (send fc :draw-on :flush nil :color #(0 0 0) :width 5)
+      (send *viewer* :viewsurface :flush))
+    (every #'identity (reverse ret))
+    ))
+
+(defun test-friction-polycone-constraint
+  (&key (max-itr 1000) (debug-view))
+  (let* ((vertices-size (+ 3 (random 10)))
+         (mu (random 5.0))
+         vertices directions ret
+         fc cc)
+    ;; Initialize
+    (multiple-value-setq
+     (vertices directions)
+     (calc-vertices-directions-for-regular-polygon mu vertices-size :offset-angle (/ pi vertices-size)))
+    (setq fc (instance face :init :vertices vertices))
+    (setq cc (calc-constraint-param-list-for-symmetric-friction-polycone mu :div vertices-size))
+    (format t ";; mu ~A, div = ~A~%" mu vertices-size)
+    (when debug-view
+      (objects (list (make-cube 10 10 10)))
+      (send *irtviewer* :draw-objects :flush nil))
+    ;; Check
+    (dotimes (i max-itr)
+      (let* ((pp (float-vector (- (random 10.0) 5.0) (- (random 10.0) 5.0) 0.0))
+             (fz (+ 1e-5 (random 300.0)))
+             ;; Check whether pp is included in fc face using :insidep method.
+             (fp (send (instance polygon2d :init (mapcar #'(lambda (x) (subseq x 0 2)) (cdr (send fc :vertices))))
+                       :insidep (float-vector (elt pp 0) (elt pp 1))))
+             ;; Check whether pp is included in contact-constraint
+             (constraint-matrix (make-matrix (length (cadr (memq :matrix cc))) 6 (cadr (memq :matrix cc))))
+             (mp (mapcar #'(lambda (x y) (not (< x y)))
+                         (concatenate cons (transform constraint-matrix (float-vector (* fz (elt pp 0)) (* (elt pp 1) fz) fz 0 0 0)))
+                         (cadr (memq :vector cc)))))
+        ;; Debug
+        (when debug-view
+          (if (every #'identity mp)
+              (send pp :draw-on :flush nil :color #f(0 1 0) :size 2)
+            (send pp :draw-on :flush nil :color #f(0 0 1) :size 2)))
+        (unless (eq :border fp) ;; neglect border
+          (when debug-view
+            (format t ";; (insidep = constraint?) = ~A, pos = ~A[mm], fz = ~A[N], insidep = ~A, constraint = ~A~%"
+                    (eq fp (every #'identity mp)) pp fz fp (every #'identity mp)))
+          (push (eq fp (every #'identity mp)) ret)
+          (unless (eq fp (every #'identity mp))
+            (when debug-view
+              (send pp :draw-on :flush t :color #f(1 0 0) :size 2))
+            (error ";; err~%")
+            ))
+        ))
+    (when debug-view
+      (send fc :draw-on :flush nil :color #(0 0 0) :width 5)
+      (send *viewer* :viewsurface :flush))
+    (every #'identity (reverse ret))
+    ))
+(warn ";; (test-cop-polygon-constraint)~%")
+(warn ";; (test-friction-polycone-constraint)~%")
 
 #|
 (defun test-wrench-comp ()

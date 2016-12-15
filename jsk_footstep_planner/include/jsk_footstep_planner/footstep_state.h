@@ -50,6 +50,8 @@
 
 #include "jsk_footstep_planner/ann_grid.h"
 #include "jsk_footstep_planner/util.h"
+#include "jsk_footstep_planner/footstep_parameters.h"
+
 namespace jsk_footstep_planner
 {
 
@@ -63,6 +65,7 @@ namespace jsk_footstep_planner
     const unsigned int close_to_success = 32;
     const unsigned int transition_limit = 64;
     const unsigned int vertical_footstep = 128;
+    const unsigned int no_enough_inliers_ratio = 256;
   }
 
   std::string projectStateToString(unsigned int state);
@@ -84,6 +87,7 @@ namespace jsk_footstep_planner
                   const Eigen::Vector3f& resolution):
       leg_(leg), pose_(pose), dimensions_(dimensions), resolution_(resolution)
     {
+      debug_print_ = false;
       float x = pose_.translation()[0];
       float y = pose_.translation()[1];
       float roll, pitch, yaw;
@@ -103,6 +107,7 @@ namespace jsk_footstep_planner
       leg_(leg), pose_(pose), dimensions_(dimensions), resolution_(resolution),
       index_x_(index_x), index_y_(index_y), index_yaw_(index_yaw)
     {
+      debug_print_ = false;
     }
 
     static
@@ -115,6 +120,8 @@ namespace jsk_footstep_planner
       return a[0] * b[1] - a[1] * b[0];
     }
     virtual jsk_footstep_msgs::Footstep::Ptr toROSMsg();
+    virtual jsk_footstep_msgs::Footstep::Ptr toROSMsg(const Eigen::Vector3f& ioffset);
+#if 0
     virtual FootstepState::Ptr
     projectToCloud(pcl::KdTreeFLANN<pcl::PointNormal>& tree,
                    pcl::PointCloud<pcl::PointNormal>::Ptr cloud,
@@ -129,19 +136,36 @@ namespace jsk_footstep_planner
                    int foot_x_sampling_num = 3,
                    int foot_y_sampling_num = 3,
                    double vertex_threshold = 0.02,
-                   const bool skip_cropping = true);
+                   const bool skip_cropping = true,
+                   const bool use_normal = false,
+                   double normal_distance_weight = 0.2,
+                   double normal_opening_angle = 0.2,
+                   double min_ratio_of_inliers = 0.8);
+#endif
+    virtual FootstepState::Ptr
+    projectToCloud(pcl::KdTreeFLANN<pcl::PointNormal>& tree,
+                   pcl::PointCloud<pcl::PointNormal>::Ptr cloud,
+                   ANNGrid::Ptr grid_search,
+                   pcl::search::Octree<pcl::PointNormal>& tree_2d,
+                   pcl::PointCloud<pcl::PointNormal>::Ptr cloud_2d,
+                   const Eigen::Vector3f& z,
+                   unsigned int& error_state,
+                   FootstepParameters &parameters);
     
+#if 0
     pcl::PointIndices::Ptr
     cropPointCloud(pcl::PointCloud<pcl::PointNormal>::Ptr cloud,
                    pcl::search::Octree<pcl::PointNormal>& tree);
-
+#endif
     pcl::PointIndices::Ptr
     cropPointCloud(pcl::PointCloud<pcl::PointNormal>::Ptr cloud,
-                   ANNGrid::Ptr grid_search);
+                   ANNGrid::Ptr grid_search,
+                   double padding_x = 0.0, double padding_y = 0.0);
 
     pcl::PointIndices::Ptr
     cropPointCloudExact(pcl::PointCloud<pcl::PointNormal>::Ptr cloud,
-                        pcl::PointIndices::Ptr near_indices);
+                        pcl::PointIndices::Ptr near_indices,
+                        double padding_x = 0.0, double padding_y = 0.0);
 
     template <class PointT>
     PointT toPoint()
@@ -154,32 +178,33 @@ namespace jsk_footstep_planner
     inline void vertices(Eigen::Vector3f& a,
                          Eigen::Vector3f& b,
                          Eigen::Vector3f& c,
-                         Eigen::Vector3f& d)
+                         Eigen::Vector3f& d,
+                         double collision_padding = 0)
     {
       const Eigen::Vector3f ux = Eigen::Vector3f::UnitX();
       const Eigen::Vector3f uy = Eigen::Vector3f::UnitY();
-
-      a = Eigen::Vector3f((pose_ * Eigen::Translation3f(ux * dimensions_[0] / 2 + uy * dimensions_[1] / 2)).translation());
-      b = Eigen::Vector3f((pose_ * Eigen::Translation3f(- ux * dimensions_[0] / 2 + uy * dimensions_[1] / 2)).translation());
-      c = Eigen::Vector3f((pose_ * Eigen::Translation3f(- ux * dimensions_[0] / 2 - uy * dimensions_[1] / 2)).translation());
-      d = Eigen::Vector3f((pose_ * Eigen::Translation3f(ux * dimensions_[0] / 2 - uy * dimensions_[1] / 2)).translation());
-
+      double dim0 = dimensions_[0] + collision_padding;
+      double dim1 = dimensions_[1] + collision_padding;
+      a = Eigen::Vector3f((pose_ * Eigen::Translation3f(  ux * dim0 / 2 + uy * dim1 / 2)).translation());
+      b = Eigen::Vector3f((pose_ * Eigen::Translation3f(- ux * dim0 / 2 + uy * dim1 / 2)).translation());
+      c = Eigen::Vector3f((pose_ * Eigen::Translation3f(- ux * dim0 / 2 - uy * dim1 / 2)).translation());
+      d = Eigen::Vector3f((pose_ * Eigen::Translation3f(  ux * dim0 / 2 - uy * dim1 / 2)).translation());
     }
     
     /**
      * @brief
      * return true if this and other are collision free.
      */
-    virtual bool crossCheck(FootstepState::Ptr other);
+    virtual bool crossCheck(FootstepState::Ptr other, float collision_padding = 0);
     
-    virtual Eigen::Affine3f getPose() { return pose_; }
+    virtual Eigen::Affine3f getPose() const { return pose_; }
     virtual void setPose(const Eigen::Affine3f& pose)
     {
       pose_ = pose;
     }
     
-    virtual int getLeg() { return leg_; }
-    virtual Eigen::Vector3f getDimensions() { return dimensions_; }
+    virtual int getLeg() const { return leg_; }
+    virtual Eigen::Vector3f getDimensions() const { return dimensions_; }
     bool operator==(FootstepState& other)
     {
       return ((index_x_ == other.index_x_) &&
@@ -187,7 +212,7 @@ namespace jsk_footstep_planner
               (index_yaw_ == other.index_yaw_));
     }
 
-    virtual Eigen::Vector3f getResolution() { return resolution_; }
+    virtual Eigen::Vector3f getResolution() const { return resolution_; }
       
 
     inline virtual int indexX() { return index_x_; }
@@ -221,6 +246,7 @@ namespace jsk_footstep_planner
     int index_x_;
     int index_y_;
     int index_yaw_;
+    bool debug_print_;
   private:
     
   };
