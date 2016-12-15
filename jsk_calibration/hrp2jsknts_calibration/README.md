@@ -3,19 +3,19 @@
 ## How to hand/eye calibrate
 ### 1. Setup
 0. Compile `hrpsys_ros_bridge_tutorials` with HRP2JSKNTS model (The model is not public).
-
-  ```
+```
 $ catkin build hrpsys_ros_bridge_tutorials
 ```
+0. You may have to change frame_id or other sensor related codes hard coded in system.yaml, cam_config.yaml, free_arms.yaml, free_cb_locations.yaml, system.yaml
 1. Before calibrate hand/eye, Please confirm that your intrinsic parameter is calibrated.
 
 ### 2. Capture data
-1. run `capture_data.launch`
-
-  ```
+1. run `capture_data.launch` (You may have to set camera_ns to your camera ns)
+```
 $ roscd jsk_calibration/hrp2jsknts_calibration/capture_data
 $ roslaunch capture_data.launch
 ```
+
 1. Robot moves LEFT arm. Please attach checker board to its left hand.
 2. Press enter to run capturing
 3. After a while robot moves RIGHT arm. Please attach checker board to right hand.
@@ -26,19 +26,20 @@ you run `capture_data.launch`
 
 ### 3. Estimate parameter
 1. If you have some samples failed to capture data, please remove line from initial_poses.yaml
-2. start roscore
+2. Check `spacing_x:` and `spacing_y:` values of `checkerboards:` in `estimate_params/config/system.yaml`. Please edit these values to be measurement values for actual checkerboard.
+3. start roscore
 
   ```
 $ rossetlocal
 $ roscore
 ```
-3. run `calibrate_hrp2jsknts.sh`.
+4. run `calibrate_hrp2jsknts.sh`.
 
   ```
 $ rosssetlocal
 $ ./calibrate_hrp2jsknts.sh
 ```
-4. After a while (1 hour), you will get calibrated urdf file. The name of urdf file is
+5. After a while (1 hour), you will get calibrated urdf file. The name of urdf file is
 `robot_calibrated_YYYY_MM_DD_HH_SS.xml`.
 Uncalibrated urdf file is `robot_uncalibrated_YYYY_MM_DD_HH_SS.xml`.
 
@@ -46,7 +47,7 @@ Uncalibrated urdf file is `robot_uncalibrated_YYYY_MM_DD_HH_SS.xml`.
 1. kill `/hrpsys_state_publisher`
 
   ```
-$ rosnode kill /hrpsys_state_publishe
+$ rosnode kill /hrpsys_state_publisher
 ```
 2. update `/robot_description`
 
