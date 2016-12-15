@@ -52,8 +52,11 @@
 #include "jsk_footstep_planner/footstep_graph.h"
 #include "jsk_footstep_planner/astar_solver.h"
 #include "jsk_footstep_planner/footstep_astar_solver.h"
+#include "jsk_footstep_planner/footstep_parameters.h"
 #include <jsk_footstep_planner/CollisionBoundingBoxInfo.h>
 #include <jsk_interactive_marker/SnapFootPrint.h>
+
+#include "jsk_footstep_planner/ProjectFootstep.h"
 
 namespace jsk_footstep_planner
 {
@@ -109,6 +112,9 @@ namespace jsk_footstep_planner
     virtual bool projectFootPrintService(
       jsk_interactive_marker::SnapFootPrint::Request& req,
       jsk_interactive_marker::SnapFootPrint::Response& res);
+    virtual bool projectFootstepService(
+      jsk_footstep_planner::ProjectFootstep::Request& req,
+      jsk_footstep_planner::ProjectFootstep::Response& res);
     virtual bool collisionBoundingBoxInfoService(
       jsk_footstep_planner::CollisionBoundingBoxInfo::Request& req,
       jsk_footstep_planner::CollisionBoundingBoxInfo::Response& res);
@@ -130,46 +136,27 @@ namespace jsk_footstep_planner
     ros::ServiceServer srv_project_footprint_;
     ros::ServiceServer srv_project_footprint_with_local_search_;
     ros::ServiceServer srv_collision_bounding_box_info_;
+    ros::ServiceServer srv_project_footstep_;
     pcl::PointCloud<pcl::PointNormal>::Ptr pointcloud_model_;
     pcl::PointCloud<pcl::PointXYZ>::Ptr obstacle_model_;
     FootstepGraph::Ptr graph_;
     std::vector<Eigen::Affine3f> successors_;
     Eigen::Vector3f collision_bbox_size_;
     Eigen::Affine3f collision_bbox_offset_;
+    Eigen::Vector3f inv_lleg_footstep_offset_;
+    Eigen::Vector3f inv_rleg_footstep_offset_;
     std_msgs::Header latest_header_;
+    // Common Parameters
+    FootstepParameters parameters_;
+
     // Parameters
     bool rich_profiling_;
+    bool project_start_state_;
+    bool project_goal_state_;
     bool use_pointcloud_model_;
     bool use_lazy_perception_;
     bool use_local_movement_;
-    bool use_transition_limit_;
     bool use_obstacle_model_;
-    bool use_global_transition_limit_;
-    bool project_start_state_;
-    bool project_goal_state_;
-    double local_move_x_;
-    double local_move_y_;
-    double local_move_theta_;
-    int local_move_x_num_;
-    int local_move_y_num_;
-    int local_move_theta_num_;
-    double transition_limit_x_;
-    double transition_limit_y_;
-    double transition_limit_z_;
-    double transition_limit_roll_;
-    double transition_limit_pitch_;
-    double transition_limit_yaw_;
-    double global_transition_limit_roll_;
-    double global_transition_limit_pitch_;
-    double obstacle_resolution_;
-    double goal_pos_thr_;
-    double goal_rot_thr_;
-    int plane_estimation_max_iterations_;
-    int plane_estimation_min_inliers_;
-    double plane_estimation_outlier_threshold_;
-    int support_check_x_sampling_;
-    int support_check_y_sampling_;
-    double support_check_vertex_neighbor_threshold_;
     double resolution_x_;
     double resolution_y_;
     double resolution_theta_;
@@ -185,6 +172,8 @@ namespace jsk_footstep_planner
     double cost_weight_;
     double heuristic_weight_;
     std::string pointcloud_model_frame_id_, obstacle_model_frame_id_;
+    double planning_timeout_;
+
   private:
     
   };
