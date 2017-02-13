@@ -1,0 +1,12 @@
+Source: ros-jade-jsk-teleop-joy
+Section: misc
+Priority: extra
+Maintainer: Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), ros-jade-catkin, ros-jade-diagnostic-msgs, ros-jade-diagnostic-updater, ros-jade-interactive-markers, ros-jade-joy-mouse, ros-jade-jsk-footstep-msgs, ros-jade-jsk-interactive-marker, ros-jade-jsk-rviz-plugins, ros-jade-ps3joy, ros-jade-tf, ros-jade-view-controller-msgs, ros-jade-visualization-msgs
+Homepage: http://ros.org/wiki/jsk_teleop_joy
+Standards-Version: 3.9.2
+
+Package: ros-jade-jsk-teleop-joy
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, python-pygame, ros-jade-diagnostic-msgs, ros-jade-diagnostic-updater, ros-jade-image-view2, ros-jade-interactive-markers, ros-jade-joy-mouse, ros-jade-jsk-footstep-msgs, ros-jade-jsk-interactive-marker, ros-jade-jsk-rviz-plugins, ros-jade-ps3joy, ros-jade-tf, ros-jade-view-controller-msgs, ros-jade-visualization-msgs
+Description: jsk_teleop_joy
