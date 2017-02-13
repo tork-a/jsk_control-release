@@ -1,9 +1,0 @@
-<launch>
-  <node pkg="contact_states_observer" type="contact-states-observer.l"
-        name="contact_state_sample"/>
-  <node pkg="jsk_rviz_plugins" type="contact_state_marker.py"
-        name="contact_state_marker">
-    <remap from="~input" to="/contact_grasp_states" />
-    <param name="visualize_off" value="true"/>
-  </node>
-</launch>
