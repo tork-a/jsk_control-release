@@ -1,0 +1,27 @@
+From 4130492d8539cdd959bca3918b4e6f712645dfc1 Mon Sep 17 00:00:00 2001
+From: Kei Okada <kei.okada@gmail.com>
+Date: Tue, 14 Feb 2017 09:58:50 +0900
+Subject: [PATCH] comment out pr2_controllers_msgs
+
+---
+ package.xml | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/package.xml b/package.xml
+index 382aa3a..883dae0 100644
+--- a/package.xml
++++ b/package.xml
+@@ -10,8 +10,8 @@
+   <run_depend>roseus</run_depend>
+   <build_depend>pr2_msgs</build_depend>
+   <run_depend>pr2_msgs</run_depend>
+-  <build_depend>pr2_controllers_msgs</build_depend>
+-  <run_depend>pr2_controllers_msgs</run_depend>
++  <!-- <build_depend>pr2_controllers_msgs</build_depend> -->
++  <!-- <run_depend>pr2_controllers_msgs</run_depend> -->
+   <export>
+   </export>
+ </package>
+-- 
+1.9.0
+
