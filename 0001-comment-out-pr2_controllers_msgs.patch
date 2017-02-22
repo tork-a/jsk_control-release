@@ -1,4 +1,4 @@
-From 4130492d8539cdd959bca3918b4e6f712645dfc1 Mon Sep 17 00:00:00 2001
+From 2ed1d0446f7ed12798334fcde944e0375870f237 Mon Sep 17 00:00:00 2001
 From: Kei Okada <kei.okada@gmail.com>
 Date: Tue, 14 Feb 2017 09:58:50 +0900
 Subject: [PATCH] comment out pr2_controllers_msgs
@@ -23,5 +23,5 @@ index 382aa3a..883dae0 100644
    </export>
  </package>
 -- 
-1.9.0
+1.9.1
 
