@@ -1,0 +1,12 @@
+Source: ros-jade-eus-qpoases
+Section: misc
+Priority: extra
+Maintainer: Shunichi Nozawa <nozawa@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), ros-jade-catkin, ros-jade-euslisp, ros-jade-rostest, subversion
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jade-eus-qpoases
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-jade-euslisp, ros-jade-rostest
+Description: eus_qpoases
