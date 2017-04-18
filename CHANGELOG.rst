@@ -2,6 +2,14 @@
 Changelog for package eus_qpoases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.13 (2017-04-18)
+-------------------
+
+0.1.12 (2017-02-22)
+-------------------
+* mv .gitignore to .placeholder
+* Contributors: Kei Okada
+
 0.1.11 (2017-02-09)
 -------------------
 * Set include path of qpoases in eus_qpoases
