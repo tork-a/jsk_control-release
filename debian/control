@@ -1,0 +1,12 @@
+Source: ros-jade-jsk-ik-server
+Section: misc
+Priority: extra
+Maintainer: furuta <furuta@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), ros-jade-catkin, ros-jade-cmake-modules, ros-jade-mk, ros-jade-moveit-msgs, ros-jade-roseus, ros-jade-rostest, ros-jade-tf
+Homepage: http://ros.org/wiki/jsk_ik_server
+Standards-Version: 3.9.2
+
+Package: ros-jade-jsk-ik-server
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-jade-cmake-modules, ros-jade-mk, ros-jade-moveit-msgs, ros-jade-roseus, ros-jade-rostest, ros-jade-tf
+Description: jsk_ik_server
