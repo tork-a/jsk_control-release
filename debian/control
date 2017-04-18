@@ -1,0 +1,12 @@
+Source: ros-indigo-jsk-control
+Section: misc
+Priority: extra
+Maintainer: Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), ros-indigo-catkin
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-indigo-jsk-control
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-indigo-eus-nlopt, ros-indigo-eus-qp, ros-indigo-eus-qpoases, ros-indigo-joy-mouse, ros-indigo-jsk-calibration, ros-indigo-jsk-footstep-controller, ros-indigo-jsk-footstep-planner, ros-indigo-jsk-ik-server, ros-indigo-jsk-teleop-joy
+Description: The jsk_control package
