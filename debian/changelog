@@ -1,0 +1,87 @@
+ros-kinetic-joy-mouse (0.1.13-0wily) wily; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Mon, 17 Apr 2017 15:00:00 -0000
+
+ros-kinetic-joy-mouse (0.1.12-0wily) wily; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Tue, 21 Feb 2017 15:00:00 -0000
+
+ros-kinetic-joy-mouse (0.1.11-0wily) wily; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Wed, 08 Feb 2017 15:00:00 -0000
+
+ros-kinetic-joy-mouse (0.1.10-0wily) wily; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Wed, 14 Dec 2016 15:00:00 -0000
+
+ros-kinetic-joy-mouse (0.1.9-0wily) wily; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Tue, 22 Mar 2016 15:00:00 -0000
+
+ros-kinetic-joy-mouse (0.1.8-0wily) wily; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Sun, 01 Nov 2015 15:00:00 -0000
+
+ros-kinetic-joy-mouse (0.1.7-0wily) wily; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Sat, 31 Oct 2015 15:00:00 -0000
+
+ros-kinetic-joy-mouse (0.1.6-0wily) wily; urgency=high
+
+  * [joy_mouse] Update README.md about udev a little bit
+  * [joy_mouse] Add documentation about how to set up udev
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Wed, 10 Jun 2015 15:00:00 -0000
+
+ros-kinetic-joy-mouse (0.1.5-0wily) wily; urgency=high
+
+  * [joy_mouse] Use name of kensington mouse and remove dev file
+    specification.
+    [jsk_teleop_joy] Remove DEV argument
+  * [joy_mouse] Add name API to lookup device by name like
+    "TPPS/2 IBM TrackPoint"
+  * Contributors: Ryohei Ueda
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Wed, 07 Jan 2015 15:00:00 -0000
+
+ros-kinetic-joy-mouse (0.1.4-0wily) wily; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Mon, 20 Oct 2014 15:00:00 -0000
+
+ros-kinetic-joy-mouse (0.1.3-0wily) wily; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Thu, 09 Oct 2014 15:00:00 -0000
+
+ros-kinetic-joy-mouse (0.1.2-0wily) wily; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Sun, 07 Sep 2014 15:00:00 -0000
+
+ros-kinetic-joy-mouse (0.1.1-0wily) wily; urgency=high
+
+  * add script to control head via trackball
+  * add new package: joy_mouse to publish Joy message from mouse input
+  * Contributors: Ryohei Ueda
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Wed, 03 Sep 2014 15:00:00 -0000
+
+
