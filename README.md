@@ -1,3 +1,37 @@
+## jsk_control (jade) - 0.1.13-0
+
+The packages in the `jsk_control` repository were released into the `jade` distro by running `./send_to_bloom.py jsk-ros-pkg jsk_control` on `Tue, 18 Apr 2017 03:10:51 -0000`
+
+These packages were released:
+- `contact_states_observer`
+- `eus_nlopt`
+- `eus_qp`
+- `eus_qpoases`
+- `joy_mouse`
+- `jsk_calibration`
+- `jsk_control`
+- `jsk_footstep_controller`
+- `jsk_footstep_planner`
+- `jsk_ik_server`
+- `jsk_teleop_joy`
+
+Version of package(s) in repository `jsk_control`:
+
+- upstream repository: https://github.com/jsk-ros-pkg/jsk_control.git
+- release repository: https://github.com/tork-a/jsk_control-release.git
+- rosdistro version: `0.1.11-1`
+- old version: `0.1.11-1`
+- new version: `0.1.13-0`
+
+Versions of tools used:
+
+- bloom version: `0.5.25`
+- catkin_pkg version: `0.3.1`
+- rosdep version: `0.11.5`
+- rosdistro version: `0.6.1`
+- vcstools version: `0.1.39`
+
+
 ## jsk_control (indigo) - 0.1.13-0
 
 The packages in the `jsk_control` repository were released into the `indigo` distro by running `./send_to_bloom.py jsk-ros-pkg jsk_control` on `Tue, 18 Apr 2017 03:00:12 -0000`
