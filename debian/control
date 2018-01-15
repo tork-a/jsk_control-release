@@ -1,0 +1,12 @@
+Source: ros-indigo-jsk-ik-server
+Section: misc
+Priority: extra
+Maintainer: furuta <furuta@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), ros-indigo-catkin, ros-indigo-cmake-modules, ros-indigo-mk, ros-indigo-moveit-msgs, ros-indigo-roseus, ros-indigo-rostest, ros-indigo-tf
+Homepage: http://ros.org/wiki/jsk_ik_server
+Standards-Version: 3.9.2
+
+Package: ros-indigo-jsk-ik-server
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-indigo-cmake-modules, ros-indigo-mk, ros-indigo-moveit-msgs, ros-indigo-roseus, ros-indigo-rostest, ros-indigo-tf
+Description: jsk_ik_server
