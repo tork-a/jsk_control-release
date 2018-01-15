@@ -2,6 +2,9 @@
 Changelog for package jsk_teleop_joy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.14 (2018-01-15)
+-------------------
+
 0.1.13 (2017-04-18)
 -------------------
 * [jsk_footstep_planner, jsk_teleop_joy] add stack mode to footstep_marker
