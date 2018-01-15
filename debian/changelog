@@ -1,0 +1,57 @@
+ros-kinetic-cmd-vel-smoother (0.1.14-0xenial) xenial; urgency=high
+
+  * add cmd_vel_smoother package (#683 <https://github.com/jsk-ros-pkg/jsk_control/issues/683>)
+    * add cmd_vel_smoother package
+  * Contributors: Yuki Furuta
+
+ -- Yuki Furuta <furushchev@jsk.imi.i.u-tokyo.ac.jp>  Mon, 15 Jan 2018 00:00:00 -0000
+
+ros-kinetic-cmd-vel-smoother (0.1.13-0xenial) xenial; urgency=high
+
+
+
+ -- Yuki Furuta <furushchev@jsk.imi.i.u-tokyo.ac.jp>  Tue, 18 Apr 2017 00:00:00 -0000
+
+ros-kinetic-cmd-vel-smoother (0.1.12-0xenial) xenial; urgency=high
+
+
+
+ -- Yuki Furuta <furushchev@jsk.imi.i.u-tokyo.ac.jp>  Wed, 22 Feb 2017 00:00:00 -0000
+
+ros-kinetic-cmd-vel-smoother (0.1.11-0xenial) xenial; urgency=high
+
+
+
+ -- Yuki Furuta <furushchev@jsk.imi.i.u-tokyo.ac.jp>  Thu, 09 Feb 2017 00:00:00 -0000
+
+ros-kinetic-cmd-vel-smoother (0.1.10-0xenial) xenial; urgency=high
+
+
+
+ -- Yuki Furuta <furushchev@jsk.imi.i.u-tokyo.ac.jp>  Thu, 15 Dec 2016 00:00:00 -0000
+
+ros-kinetic-cmd-vel-smoother (0.1.9-0xenial) xenial; urgency=high
+
+
+
+ -- Yuki Furuta <furushchev@jsk.imi.i.u-tokyo.ac.jp>  Wed, 23 Mar 2016 00:00:00 -0000
+
+ros-kinetic-cmd-vel-smoother (0.1.8-0xenial) xenial; urgency=high
+
+
+
+ -- Yuki Furuta <furushchev@jsk.imi.i.u-tokyo.ac.jp>  Mon, 02 Nov 2015 00:00:00 -0000
+
+ros-kinetic-cmd-vel-smoother (0.1.7-0xenial) xenial; urgency=high
+
+
+
+ -- Yuki Furuta <furushchev@jsk.imi.i.u-tokyo.ac.jp>  Sun, 01 Nov 2015 00:00:00 -0000
+
+ros-kinetic-cmd-vel-smoother (0.1.6-0xenial) xenial; urgency=high
+
+
+
+ -- Yuki Furuta <furushchev@jsk.imi.i.u-tokyo.ac.jp>  Thu, 11 Jun 2015 00:00:00 -0000
+
+
