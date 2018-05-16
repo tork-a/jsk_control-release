@@ -1,0 +1,12 @@
+Source: ros-indigo-jsk-teleop-joy
+Section: misc
+Priority: extra
+Maintainer: Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), ros-indigo-catkin
+Homepage: http://ros.org/wiki/jsk_teleop_joy
+Standards-Version: 3.9.2
+
+Package: ros-indigo-jsk-teleop-joy
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, python-pygame, ros-indigo-diagnostic-msgs, ros-indigo-diagnostic-updater, ros-indigo-image-view2, ros-indigo-interactive-markers, ros-indigo-joy-mouse, ros-indigo-jsk-footstep-msgs, ros-indigo-jsk-interactive-marker, ros-indigo-jsk-rviz-plugins, ros-indigo-ps3joy, ros-indigo-tf, ros-indigo-view-controller-msgs, ros-indigo-visualization-msgs
+Description: jsk_teleop_joy
