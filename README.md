@@ -1,3 +1,38 @@
+## jsk_control (indigo) - 0.1.15-0
+
+The packages in the `jsk_control` repository were released into the `indigo` distro by running `/usr/bin/bloom-release -y jsk_control --rosdistro indigo --track indigo` on `Wed, 16 May 2018 05:35:12 -0000`
+
+These packages were released:
+- `cmd_vel_smoother`
+- `contact_states_observer`
+- `eus_nlopt`
+- `eus_qp`
+- `eus_qpoases`
+- `joy_mouse`
+- `jsk_calibration`
+- `jsk_control`
+- `jsk_footstep_controller`
+- `jsk_footstep_planner`
+- `jsk_ik_server`
+- `jsk_teleop_joy`
+
+Version of package(s) in repository `jsk_control`:
+
+- upstream repository: https://github.com/jsk-ros-pkg/jsk_control.git
+- release repository: https://github.com/tork-a/jsk_control-release.git
+- rosdistro version: `0.1.14-0`
+- old version: `0.1.14-0`
+- new version: `0.1.15-0`
+
+Versions of tools used:
+
+- bloom version: `0.6.4`
+- catkin_pkg version: `0.4.1`
+- rosdep version: `0.12.2`
+- rosdistro version: `0.6.8`
+- vcstools version: `0.1.40`
+
+
 ## jsk_control (kinetic) - 0.1.14-0
 
 The packages in the `jsk_control` repository were released into the `kinetic` distro by running `/home/user/bloom/venv/bin/bloom-release jsk_control --track kinetic --rosdistro kinetic` on `Mon, 15 Jan 2018 05:00:36 -0000`
