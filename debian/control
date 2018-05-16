@@ -1,0 +1,12 @@
+Source: ros-indigo-jsk-footstep-planner
+Section: misc
+Priority: extra
+Maintainer: Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), ros-indigo-catkin, ros-indigo-dynamic-reconfigure, ros-indigo-geometry-msgs, ros-indigo-jsk-footstep-msgs, ros-indigo-jsk-interactive-marker, ros-indigo-jsk-recognition-utils, ros-indigo-jsk-rviz-plugins, ros-indigo-jsk-topic-tools, ros-indigo-message-generation, ros-indigo-pcl-ros, ros-indigo-roscpp, ros-indigo-roseus, ros-indigo-visualization-msgs
+Homepage: http://ros.org/wiki/jsk_footstep_planner
+Standards-Version: 3.9.2
+
+Package: ros-indigo-jsk-footstep-planner
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-indigo-dynamic-reconfigure, ros-indigo-geometry-msgs, ros-indigo-jsk-footstep-msgs, ros-indigo-jsk-interactive-marker, ros-indigo-jsk-pcl-ros, ros-indigo-jsk-recognition-msgs, ros-indigo-jsk-recognition-utils, ros-indigo-jsk-rviz-plugins, ros-indigo-jsk-topic-tools, ros-indigo-pcl-ros, ros-indigo-roscpp, ros-indigo-roseus, ros-indigo-visualization-msgs
+Description: jsk_footstep_planner
