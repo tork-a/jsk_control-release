@@ -1,0 +1,12 @@
+Source: ros-melodic-cmd-vel-smoother
+Section: misc
+Priority: optional
+Maintainer: Yuki Furuta <furushchev@jsk.imi.i.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), ros-melodic-catkin, ros-melodic-dynamic-reconfigure, ros-melodic-geometry-msgs, ros-melodic-roscpp
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-melodic-cmd-vel-smoother
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-melodic-dynamic-reconfigure, ros-melodic-geometry-msgs, ros-melodic-roscpp
+Description: The cmd_vel_smoother package
