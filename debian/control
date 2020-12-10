@@ -1,0 +1,12 @@
+Source: ros-melodic-jsk-footstep-planner
+Section: misc
+Priority: optional
+Maintainer: Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), ros-melodic-catkin, ros-melodic-dynamic-reconfigure, ros-melodic-geometry-msgs, ros-melodic-jsk-footstep-msgs, ros-melodic-jsk-interactive-marker, ros-melodic-jsk-recognition-utils, ros-melodic-jsk-rviz-plugins, ros-melodic-jsk-topic-tools, ros-melodic-message-generation, ros-melodic-pcl-ros, ros-melodic-roscpp, ros-melodic-roseus, ros-melodic-visualization-msgs
+Homepage: http://ros.org/wiki/jsk_footstep_planner
+Standards-Version: 3.9.2
+
+Package: ros-melodic-jsk-footstep-planner
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-melodic-dynamic-reconfigure, ros-melodic-geometry-msgs, ros-melodic-jsk-footstep-msgs, ros-melodic-jsk-interactive-marker, ros-melodic-jsk-pcl-ros, ros-melodic-jsk-recognition-msgs, ros-melodic-jsk-recognition-utils, ros-melodic-jsk-rviz-plugins, ros-melodic-jsk-topic-tools, ros-melodic-pcl-ros, ros-melodic-roscpp, ros-melodic-roseus, ros-melodic-visualization-msgs
+Description: jsk_footstep_planner
