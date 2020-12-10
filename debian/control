@@ -1,0 +1,12 @@
+Source: ros-melodic-eus-nlopt
+Section: misc
+Priority: optional
+Maintainer: Noda Shintaro <s-noda@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), ros-melodic-catkin, ros-melodic-cmake-modules, ros-melodic-nlopt
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-melodic-eus-nlopt
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-melodic-euslisp, ros-melodic-nlopt
+Description: eus_nlopt
