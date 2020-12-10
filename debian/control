@@ -1,0 +1,12 @@
+Source: ros-melodic-eus-qpoases
+Section: misc
+Priority: optional
+Maintainer: Shunichi Nozawa <nozawa@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), ros-melodic-catkin, ros-melodic-euslisp, ros-melodic-rostest, subversion
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-melodic-eus-qpoases
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-melodic-euslisp, ros-melodic-rostest
+Description: eus_qpoases
