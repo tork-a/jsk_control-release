@@ -1,3 +1,38 @@
+## jsk_control (melodic) - 0.1.15-1
+
+The packages in the `jsk_control` repository were released into the `melodic` distro by running `/usr/bin/bloom-release jsk_control --rosdistro melodic --track melodic` on `Thu, 10 Dec 2020 04:54:38 -0000`
+
+These packages were released:
+- `cmd_vel_smoother`
+- `contact_states_observer`
+- `eus_nlopt`
+- `eus_qp`
+- `eus_qpoases`
+- `joy_mouse`
+- `jsk_calibration`
+- `jsk_control`
+- `jsk_footstep_controller`
+- `jsk_footstep_planner`
+- `jsk_ik_server`
+- `jsk_teleop_joy`
+
+Version of package(s) in repository `jsk_control`:
+
+- upstream repository: https://github.com/jsk-ros-pkg/jsk_control.git
+- release repository: unknown
+- rosdistro version: `null`
+- old version: `null`
+- new version: `0.1.15-1`
+
+Versions of tools used:
+
+- bloom version: `0.9.3`
+- catkin_pkg version: `0.4.16`
+- rosdep version: `0.19.0`
+- rosdistro version: `0.8.0`
+- vcstools version: `0.1.42`
+
+
 ## jsk_control (indigo) - 0.1.15-0
 
 The packages in the `jsk_control` repository were released into the `indigo` distro by running `/usr/bin/bloom-release -y jsk_control --rosdistro indigo --track indigo` on `Wed, 16 May 2018 05:35:12 -0000`
