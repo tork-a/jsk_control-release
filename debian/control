@@ -1,0 +1,12 @@
+Source: ros-noetic-contact-states-observer
+Section: misc
+Priority: optional
+Maintainer: nozawa <nozawa@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), ros-noetic-catkin, ros-noetic-message-generation, ros-noetic-std-msgs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-noetic-contact-states-observer
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-noetic-roseus, ros-noetic-std-msgs
+Description: The contact_states_observer package
