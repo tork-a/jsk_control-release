@@ -48,6 +48,8 @@ def trig():
     sound = SoundRequest()
     sound.sound = SoundRequest.SAY
     sound.command = SoundRequest.PLAY_ONCE
+    if hasattr(SoundRequest, 'volume'): # volume is added from 0.3.0 https://github.com/ros-drivers/audio_common/commit/da9623414f381642e52f59701c09928c72a54be7#diff-fe2d85580f1ccfed4e23a608df44a7f7
+        sound.volume = 1.0
     sound.arg = "Robot stands on the ground."
     g_robotsound_pub.publish(sound)
     
@@ -78,7 +80,7 @@ if __name__ == "__main__":
     rospy.init_node("stabilizer_watcher")
     contact_states_sub = rospy.Subscriber("/act_contact_states", ContactStatesStamped, contactStatesCallback, queue_size=1)
     motor_states_sub = rospy.Subscriber("/motor_states", MotorStates, motorStatesCallback, queue_size=1)
-    g_odom_init_trigger_pub = rospy.Publisher("/odom_init_trigger", Empty)
-    g_robotsound_pub = rospy.Publisher("/robotsound", SoundRequest)
+    g_odom_init_trigger_pub = rospy.Publisher("/odom_init_trigger", Empty, queue_size=1)
+    g_robotsound_pub = rospy.Publisher("/robotsound", SoundRequest, queue_size=1)
     rospy.spin()
 
