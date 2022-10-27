@@ -1,4 +1,0 @@
-<launch>
-  <test test-name="optmotiongen_test_samplerobot" pkg="eus_qp" type="test-samplerobot.l" time-limit="2000.0">
-  </test>
-</launch>
