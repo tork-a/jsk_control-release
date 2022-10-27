@@ -1,0 +1,12 @@
+Source: ros-melodic-jsk-footstep-controller
+Section: misc
+Priority: optional
+Maintainer: Ryohei Ueda <garaemon@gmail.com>
+Build-Depends: debhelper (>= 9.0.0), ros-melodic-catkin, ros-melodic-diagnostic-msgs, ros-melodic-diagnostic-updater, ros-melodic-dynamic-reconfigure, ros-melodic-genmsg, ros-melodic-geometry-msgs, ros-melodic-jsk-footstep-msgs, ros-melodic-jsk-footstep-planner, ros-melodic-jsk-pcl-ros, ros-melodic-jsk-topic-tools, ros-melodic-kdl-conversions, ros-melodic-kdl-parser, ros-melodic-message-filters, ros-melodic-message-generation, ros-melodic-sensor-msgs, ros-melodic-std-msgs, ros-melodic-tf, ros-melodic-tf-conversions, ros-melodic-tf2, ros-melodic-urdf
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-melodic-jsk-footstep-controller
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-melodic-diagnostic-msgs, ros-melodic-diagnostic-updater, ros-melodic-dynamic-reconfigure, ros-melodic-genmsg, ros-melodic-geometry-msgs, ros-melodic-jsk-footstep-msgs, ros-melodic-jsk-footstep-planner, ros-melodic-jsk-pcl-ros, ros-melodic-jsk-topic-tools, ros-melodic-kdl-conversions, ros-melodic-kdl-parser, ros-melodic-message-filters, ros-melodic-message-generation, ros-melodic-sensor-msgs, ros-melodic-sound-play, ros-melodic-std-msgs, ros-melodic-tf, ros-melodic-tf-conversions, ros-melodic-tf2, ros-melodic-urdf
+Description: The jsk_footstep_controller package
