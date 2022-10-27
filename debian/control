@@ -1,0 +1,12 @@
+Source: ros-noetic-jsk-footstep-controller
+Section: misc
+Priority: optional
+Maintainer: Ryohei Ueda <garaemon@gmail.com>
+Build-Depends: debhelper (>= 9.0.0), ros-noetic-catkin, ros-noetic-diagnostic-msgs, ros-noetic-diagnostic-updater, ros-noetic-dynamic-reconfigure, ros-noetic-genmsg, ros-noetic-geometry-msgs, ros-noetic-jsk-footstep-msgs, ros-noetic-jsk-footstep-planner, ros-noetic-jsk-pcl-ros, ros-noetic-jsk-topic-tools, ros-noetic-kdl-conversions, ros-noetic-kdl-parser, ros-noetic-message-filters, ros-noetic-message-generation, ros-noetic-sensor-msgs, ros-noetic-std-msgs, ros-noetic-tf, ros-noetic-tf-conversions, ros-noetic-tf2, ros-noetic-urdf
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-noetic-jsk-footstep-controller
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-noetic-diagnostic-msgs, ros-noetic-diagnostic-updater, ros-noetic-dynamic-reconfigure, ros-noetic-genmsg, ros-noetic-geometry-msgs, ros-noetic-jsk-footstep-msgs, ros-noetic-jsk-footstep-planner, ros-noetic-jsk-pcl-ros, ros-noetic-jsk-topic-tools, ros-noetic-kdl-conversions, ros-noetic-kdl-parser, ros-noetic-message-filters, ros-noetic-message-generation, ros-noetic-sensor-msgs, ros-noetic-sound-play, ros-noetic-std-msgs, ros-noetic-tf, ros-noetic-tf-conversions, ros-noetic-tf2, ros-noetic-urdf
+Description: The jsk_footstep_controller package
