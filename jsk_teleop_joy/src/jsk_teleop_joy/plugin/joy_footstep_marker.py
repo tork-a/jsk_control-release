@@ -8,7 +8,7 @@ except:
 
 import actionlib
 from jsk_rviz_plugins.msg import OverlayMenu
-from joy_pose_6d import JoyPose6D
+from jsk_teleop_joy.joy_pose_6d import JoyPose6D
 from jsk_interactive_marker.srv import GetTransformableMarkerPose
 from jsk_interactive_marker.srv import SetPose
 from geometry_msgs.msg import PoseStamped
@@ -84,7 +84,7 @@ set_pose [String, default: set_pose]: topic name for setting pose by topic
         if self.menu.current_index == self.menu.menus.index("Yes"):
           try:
             self.execute_footstep_srv()
-          except rospy.ServiceException, e:
+          except rospy.ServiceException as e:
             rospy.logwarn("Execute Footsteps failed: %s", e)
         self.pub.publish(self.menu)
         self.menu = None
@@ -138,9 +138,9 @@ set_pose [String, default: set_pose]: topic name for setting pose by topic
       if self.use_tf:
         marker_pose = self.tf_listener.transformPose(self.frame_id, marker_pose)
       return marker_pose
-    except rospy.ServiceException, e:
+    except rospy.ServiceException as e:
       rospy.logwarn("Failed to get initial marker pose: %s", e)
       return None
-    except tf.LookupException, e:
+    except tf.LookupException as e:
       rospy.logwarn("Failed to lookup tf: %s", e)
       return None
