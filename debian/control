@@ -1,0 +1,12 @@
+Source: ros-melodic-jsk-control
+Section: misc
+Priority: optional
+Maintainer: Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), ros-melodic-catkin
+Homepage: http://ros.org/wiki/jsk_control
+Standards-Version: 3.9.2
+
+Package: ros-melodic-jsk-control
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-melodic-eus-nlopt, ros-melodic-eus-qp, ros-melodic-eus-qpoases, ros-melodic-joy-mouse, ros-melodic-jsk-calibration, ros-melodic-jsk-footstep-controller, ros-melodic-jsk-footstep-planner, ros-melodic-jsk-ik-server, ros-melodic-jsk-teleop-joy
+Description: The jsk_control package
