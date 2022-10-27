@@ -96,8 +96,8 @@ def main():
       for param1 in parseRangedNumber(options.param1):
         for param2 in parseRangedNumber(options.param2):
           if options.verbose:
-            print "Writing [%d, %d, %d] ([0x%X, 0x%X, 0x%X])" % (midi_command_w_channel, param1, param2,
-                                                                 midi_command_w_channel, param1, param2)
+            print("Writing [%d, %d, %d] ([0x%X, 0x%X, 0x%X])" % (midi_command_w_channel, param1, param2,
+                                                                 midi_command_w_channel, param1, param2))
           controller.write_short(midi_command_w_channel, param1, param2)
           rospy.sleep(options.interval)
   else:
@@ -106,7 +106,7 @@ def main():
     # configuration := command, channel, use_param1[, param1_value]
     with open(options.write, "r+") as f:
       config = yaml.load(f)
-      if config.has_key("output"):
+      if "output" in config:
         output = config["output"]
       else:
         output = []
@@ -120,7 +120,7 @@ def main():
             configuration = (midi_command, channel, False, param1)
             if configuration not in output:
               output.append(configuration)
-              print configuration
+              print(configuration)
       config["output"] = output
       f.write(yaml.dump(config))
       f.close()
