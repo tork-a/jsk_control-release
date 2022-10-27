@@ -45,7 +45,7 @@ with open(csvfile) as f:
                 "j": j,
                 "k": k,
                 "value": value}
-        if data_by_k.has_key(k):
+        if k in data_by_k:
             data_by_k[k].append(data)
         else:
             data_by_k[k] = [data]
@@ -62,7 +62,7 @@ max_z = np.amax(z_values)
 step = (max_z - min_z) / (k_num - 1)
 # print "estimated step is", step
 
-fig, axes = plt.subplots(int(math.ceil(k_num / 3)), 3)
+fig, axes = plt.subplots(int(math.ceil(k_num / 3.0)), 3)
 images = dict()
 non_zero_counter = 0
 for k, counter in zip(data_by_k, range(k_num)):             # need to sort by k?
@@ -101,7 +101,7 @@ for k, counter in zip(data_by_k, range(k_num)):             # need to sort by k?
                    extent=[min_x-step/2, max_x+step/2, min_y-step/2, max_y+step/2])
 # cbar_ax = fig.add_axes([0.95, 0.15, 0.01, 0.7])
 # cb = fig.colorbar(im, cax=cbar_ax)
-print "{0} reached regions".format(non_zero_counter)
+print("{0} reached regions".format(non_zero_counter))
 fig.suptitle("{0} reached regions".format(non_zero_counter), fontsize=8)
 plt.tight_layout()
 
