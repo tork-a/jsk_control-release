@@ -2,6 +2,9 @@
 Changelog for package eus_qp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.17 (2023-05-28)
+-------------------
+
 0.1.16 (2022-10-27)
 -------------------
 * check x::*display* is available before running graph-view (gnuplot) (`#776 <https://github.com/jsk-ros-pkg/jsk_control/issues/776>`_)
