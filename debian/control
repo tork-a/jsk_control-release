@@ -1,0 +1,12 @@
+Source: ros-noetic-eus-nlopt
+Section: misc
+Priority: optional
+Maintainer: Noda Shintaro <s-noda@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), libnlopt-dev, ros-noetic-catkin, ros-noetic-cmake-modules
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-noetic-eus-nlopt
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libnlopt-dev, ros-noetic-euslisp
+Description: eus_nlopt
