@@ -2,6 +2,9 @@
 Changelog for package jsk_footstep_planner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.17 (2023-05-28)
+-------------------
+
 0.1.16 (2022-10-27)
 -------------------
 * run 2to3 -w -f has_key . for python3 check (`#776 <https://github.com/jsk-ros-pkg/jsk_control/issues/776>`_)
