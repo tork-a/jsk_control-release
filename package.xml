@@ -10,7 +10,7 @@
   <url>http://ros.org/wiki/jsk_teleop_joy</url>
   <buildtool_depend>catkin</buildtool_depend>
 
-  <exec_depend>ps3joy</exec_depend>
+  <!-- <exec_depend>ps3joy</exec_depend> -->
   <exec_depend>tf</exec_depend>
   <exec_depend>view_controller_msgs</exec_depend>
   <exec_depend>interactive_markers</exec_depend>
