@@ -1,0 +1,25 @@
+From 918b77268e0ca5053f7b9cafb9f6d66a78b398b5 Mon Sep 17 00:00:00 2001
+From: Kei Okada <k-okada@jsk.t.u-tokyo.ac.jp>
+Date: Sun, 28 May 2023 18:16:17 +0900
+Subject: [PATCH] comment out unreleased rosdep keys
+
+---
+ package.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/package.xml b/package.xml
+index b6000dd9..43a9e175 100644
+--- a/package.xml
++++ b/package.xml
+@@ -10,7 +10,7 @@
+   <url>http://ros.org/wiki/jsk_teleop_joy</url>
+   <buildtool_depend>catkin</buildtool_depend>
+ 
+-  <run_depend>ps3joy</run_depend>
++  <!-- <run_depend>ps3joy</run_depend> -->
+   <run_depend>tf</run_depend>
+   <run_depend>view_controller_msgs</run_depend>
+   <run_depend>interactive_markers</run_depend>
+-- 
+2.17.1
+
