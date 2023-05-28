@@ -1,0 +1,56 @@
+<package>
+  <name>jsk_footstep_planner</name>
+  <version>0.1.16</version>
+  <description>jsk_footstep_planner</description>
+  <maintainer email="ueda@jsk.t.u-tokyo.ac.jp">Ryohei Ueda</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/jsk_footstep_planner</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author email="ueda@jsk.t.u-tokyo.ac.jp">Ryohei Ueda</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>message_generation</build_depend>
+
+  <build_depend>jsk_footstep_msgs</build_depend>
+  <run_depend>jsk_footstep_msgs</run_depend>
+
+  <build_depend>jsk_recognition_utils</build_depend>
+  <run_depend>jsk_recognition_utils</run_depend>
+
+  <build_depend>roseus</build_depend>
+  <run_depend>roseus</run_depend>
+
+  <build_depend>jsk_rviz_plugins</build_depend>
+  <run_depend>jsk_rviz_plugins</run_depend>
+
+  <build_depend>jsk_topic_tools</build_depend>
+  <run_depend>jsk_topic_tools</run_depend>
+
+  <build_depend>roscpp</build_depend>
+  <run_depend>roscpp</run_depend>
+
+  <build_depend>jsk_interactive_marker</build_depend>
+  <run_depend>jsk_interactive_marker</run_depend>
+
+  <build_depend>visualization_msgs</build_depend>
+  <run_depend>visualization_msgs</run_depend>
+
+  <build_depend>pcl_ros</build_depend> <!-- pcl?? -->
+  <run_depend>pcl_ros</run_depend>     <!-- pcl?? -->
+
+  <build_depend>dynamic_reconfigure</build_depend>
+  <run_depend>dynamic_reconfigure</run_depend>
+
+  <build_depend>geometry_msgs</build_depend>
+  <run_depend>geometry_msgs</run_depend>
+
+  <run_depend>jsk_pcl_ros</run_depend>
+  <run_depend>jsk_recognition_msgs</run_depend>
+  <export>
+
+  </export>
+</package>
