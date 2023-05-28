@@ -5,12 +5,12 @@
   </description>
   <author email="ueda@jsk.t.u-tokyo.ac.jp">Ryohei Ueda</author>
   <maintainer email="ueda@jsk.t.u-tokyo.ac.jp">Ryohei Ueda</maintainer>
-  <version>0.1.16</version>
+  <version>0.1.17</version>
   <license>BSD</license>
   <url>http://ros.org/wiki/jsk_teleop_joy</url>
   <buildtool_depend>catkin</buildtool_depend>
 
-  <run_depend>ps3joy</run_depend>
+  <!-- <run_depend>ps3joy</run_depend> -->
   <run_depend>tf</run_depend>
   <run_depend>view_controller_msgs</run_depend>
   <run_depend>interactive_markers</run_depend>
