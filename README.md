@@ -1,3 +1,39 @@
+## jsk_control (noetic) - 0.1.17-1
+
+The packages in the `jsk_control` repository were released into the `noetic` distro by running `/usr/bin/bloom-release jsk_control --rosdistro noetic --track noetic` on `Sun, 28 May 2023 09:12:36 -0000`
+
+These packages were released:
+- `cmd_vel_smoother`
+- `contact_states_observer`
+- `eus_nlopt`
+- `eus_qp`
+- `eus_qpoases`
+- `eus_teleop`
+- `joy_mouse`
+- `jsk_calibration`
+- `jsk_control`
+- `jsk_footstep_controller`
+- `jsk_footstep_planner`
+- `jsk_ik_server`
+- `jsk_teleop_joy`
+
+Version of package(s) in repository `jsk_control`:
+
+- upstream repository: https://github.com/jsk-ros-pkg/jsk_control.git
+- release repository: https://github.com/tork-a/jsk_control-release.git
+- rosdistro version: `0.1.16-1`
+- old version: `0.1.16-1`
+- new version: `0.1.17-1`
+
+Versions of tools used:
+
+- bloom version: `0.11.2`
+- catkin_pkg version: `0.5.2`
+- rosdep version: `0.22.1`
+- rosdistro version: `0.8.3`
+- vcstools version: `0.1.42`
+
+
 ## jsk_control (noetic) - 0.1.16-1
 
 The packages in the `jsk_control` repository were released into the `noetic` distro by running `/usr/bin/bloom-release jsk_control --rosdistro noetic --track noetic` on `Thu, 27 Oct 2022 03:08:26 -0000`
