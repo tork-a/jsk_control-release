@@ -1,0 +1,12 @@
+Source: ros-noetic-jsk-footstep-planner
+Section: misc
+Priority: optional
+Maintainer: Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), ros-noetic-catkin, ros-noetic-dynamic-reconfigure, ros-noetic-geometry-msgs, ros-noetic-jsk-footstep-msgs, ros-noetic-jsk-interactive-marker, ros-noetic-jsk-recognition-utils, ros-noetic-jsk-rviz-plugins, ros-noetic-jsk-topic-tools, ros-noetic-message-generation, ros-noetic-pcl-ros, ros-noetic-roscpp, ros-noetic-roseus, ros-noetic-visualization-msgs
+Homepage: http://ros.org/wiki/jsk_footstep_planner
+Standards-Version: 3.9.2
+
+Package: ros-noetic-jsk-footstep-planner
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-noetic-dynamic-reconfigure, ros-noetic-geometry-msgs, ros-noetic-jsk-footstep-msgs, ros-noetic-jsk-interactive-marker, ros-noetic-jsk-pcl-ros, ros-noetic-jsk-recognition-msgs, ros-noetic-jsk-recognition-utils, ros-noetic-jsk-rviz-plugins, ros-noetic-jsk-topic-tools, ros-noetic-pcl-ros, ros-noetic-roscpp, ros-noetic-roseus, ros-noetic-visualization-msgs
+Description: jsk_footstep_planner
