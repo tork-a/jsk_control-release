@@ -1,4 +1,4 @@
-From 918b77268e0ca5053f7b9cafb9f6d66a78b398b5 Mon Sep 17 00:00:00 2001
+From 85f364cec6d3d9c7abd5d783c6ebaa896488104e Mon Sep 17 00:00:00 2001
 From: Kei Okada <k-okada@jsk.t.u-tokyo.ac.jp>
 Date: Sun, 28 May 2023 18:16:17 +0900
 Subject: [PATCH] comment out unreleased rosdep keys
