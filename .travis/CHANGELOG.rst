@@ -2,6 +2,47 @@
 Changelog for package jsk_travis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.5.27 (2024-01-15)
+-------------------
+* Use snapshot of rosdep list on melodic (`#457 <https://github.com/jsk-ros-pkg/jsk_travis/issues/457>`_)
+
+  * Move rosdep_snapshots as well as travis.sh to use rosdep_snapshots in travis.sh
+  * Use snapshot of rosdep list on melodic
+    After https://github.com/ros/rosdistro/pull/39174 was merged, rosdep key 'python-omniorb' cannot be resolved on melodic
+  * Include snapshot of rosdep list in this repository
+
+* Contributors: Shun Hasegawa
+
+0.5.26 (2023-08-10)
+-------------------
+* suppress test warning in catkin run_tests (`#448 <https://github.com/jsk-ros-pkg/jsk_travis/issues/448>`_)
+* fix dockerhub (`#456 <https://github.com/jsk-ros-pkg/jsk_travis/issues/456>`_)
+
+  * fix dockerfile as same as .travis.yml fix at 'Fix chainer and protobuf versions on travis because they release incompatible versions to Python2, b779159'
+  * docker: specify dlib version
+
+* Fix CI (`#455 <https://github.com/jsk-ros-pkg/jsk_travis/issues/455>`_)
+
+  * Install python-dev and python-numpy to install chainercv on travis docker
+  * Skip errors from rosdep install on travis as well as github actions
+  * We cannot fix chainer and protobuf versions. What we have to do here is to make fcn/chainercv/chainer installed even though rosdep install of them fails
+  * Fix chainer and protobuf versions on travis because they release incompatible versions to Python2
+    - https://github.com/chainer/chainer/issues/8545
+    - https://github.com/protocolbuffers/protobuf/issues/8984
+  * Use checkout@v1 on hydro
+  * use checkout@v3.0.2
+
+* Contributors: Kei Okada, Shingo Kitagawa, Shun Hasegawa
+
+0.5.25 (2022-05-13)
+-------------------
+* add CATKNI_IGNORE, whcih is wrongly removed in 728c456
+* Do apt-get update before install package (`#446 <https://github.com/jsk-ros-pkg/jsk_travis/issues/446>`_)
+* enable to set TIMEOUT in Jenkins (default 120)f( `#443 <https://github.com/jsk-ros-pkg/jsk_travis/issues/443>`_)
+* fix permision issue  https://github.com/actions/checkout/issues/760#issuecomment-1097501613 (`#442 <https://github.com/jsk-ros-pkg/jsk_travis/issues/442>`_)
+
+* Contributors: Kei Okada, Iori Yanokura
+
 0.5.24 (2022-03-23)
 -------------------
 * add melodic_unencrypted_git_protocol to cehck git:// (`#438 <https://github.com/jsk-ros-pkg/jsk_travis/issues/438>`_)
