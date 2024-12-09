@@ -1,0 +1,12 @@
+Source: ros-noetic-jsk-ik-server
+Section: misc
+Priority: optional
+Maintainer: furuta <furuta@jsk.t.u-tokyo.ac.jp>
+Build-Depends: debhelper (>= 9.0.0), ros-noetic-catkin, ros-noetic-cmake-modules, ros-noetic-mk, ros-noetic-moveit-msgs, ros-noetic-roseus, ros-noetic-rostest, ros-noetic-tf
+Homepage: http://ros.org/wiki/jsk_ik_server
+Standards-Version: 3.9.2
+
+Package: ros-noetic-jsk-ik-server
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-noetic-cmake-modules, ros-noetic-mk, ros-noetic-moveit-msgs, ros-noetic-roseus, ros-noetic-rostest, ros-noetic-tf
+Description: jsk_ik_server
