@@ -1,0 +1,194 @@
+ros-noetic-jsk-calibration (0.1.18-1focal) focal; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Sun, 08 Dec 2024 15:00:00 -0000
+
+ros-noetic-jsk-calibration (0.1.17-1focal) focal; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Sat, 27 May 2023 15:00:00 -0000
+
+ros-noetic-jsk-calibration (0.1.16-1focal) focal; urgency=high
+
+  * remove roseus from CMakeLists.txt (#773 <https://github.com/jsk-ros-pkg/jsk_control/issues/773>)
+  * [joint_states_appender.py]add queue_size (#734 <https://github.com/jsk-ros-pkg/jsk_control/issues/734>)
+  * 0755 -> -h0o0755 : SyntaxError: leading zeros in decimal integer literals are not permitted; use an 0o prefix for octal integers, 2to3 -w -fprint . (#763 <https://github.com/jsk-ros-pkg/jsk_control/issues/763>)
+  * Contributors: Kei Okada, Naoki Hiraoka
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Wed, 26 Oct 2022 15:00:00 -0000
+
+ros-noetic-jsk-calibration (0.1.15-1focal) focal; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Tue, 15 May 2018 15:00:00 -0000
+
+ros-noetic-jsk-calibration (0.1.14-1focal) focal; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Sun, 14 Jan 2018 15:00:00 -0000
+
+ros-noetic-jsk-calibration (0.1.13-1focal) focal; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Mon, 17 Apr 2017 15:00:00 -0000
+
+ros-noetic-jsk-calibration (0.1.12-1focal) focal; urgency=high
+
+  * CMakeLists.txt: remove pr2_* dependency, add install
+  * Contributors: Kei Okada
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Tue, 21 Feb 2017 15:00:00 -0000
+
+ros-noetic-jsk-calibration (0.1.11-1focal) focal; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Wed, 08 Feb 2017 15:00:00 -0000
+
+ros-noetic-jsk-calibration (0.1.10-1focal) focal; urgency=high
+
+  * fix checker board spacing parameters to be 0.03
+  * [jsk_calibration] Modify checkerboard spacing values and modify README
+  * fix hrp2w_calibration
+  * update for hrp2w_calibration
+  * add readme comment
+  * change multisense -> xtion (or carmine)
+  * delete file before rename
+  * [jsk_calibration] Rename manual_calibration_viewer launch and fix colorize_points topic name
+  * add files for hrp2w
+  * [jsk_control/jsk_calibration] Fix typo.
+  * Contributors: Kohei Kimura, Yohei Kakiuchi
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Wed, 14 Dec 2016 15:00:00 -0000
+
+ros-noetic-jsk-calibration (0.1.9-1focal) focal; urgency=high
+
+  * [jsk_calibration] Update camera config parameter for JAXON
+    Modified:
+    - jsk_calibration/jaxon_calibration/capture_data/hardware_config/cam_config.yaml
+  * [jsk_calibration] Add forgotten config file for rviz viewer
+  * [jsk_calibration] add utilitiy for jaxon_calibration
+  * [jsk_calibration][JAXON_RED] update poses for calibration
+  * [jsk_calibration] Add calibration viewer for manual calibration
+  * {jsk_calibration, jsk_footstep_planner}/README.md: fix section/subsection
+  * Contributors: Kei Okada, Ryohei Ueda, Yohei Kakiuchi, Iori Kumagai
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Tue, 22 Mar 2016 15:00:00 -0000
+
+ros-noetic-jsk-calibration (0.1.8-1focal) focal; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Sun, 01 Nov 2015 15:00:00 -0000
+
+ros-noetic-jsk-calibration (0.1.7-1focal) focal; urgency=high
+
+  * [jsk_calibration] Fix typo in README
+  * Contributors: Ryohei Ueda
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Sat, 31 Oct 2015 15:00:00 -0000
+
+ros-noetic-jsk-calibration (0.1.6-1focal) focal; urgency=high
+
+  * rename url
+  * [JAXON] add jaxon_calibration
+  * [JAXON] add motion generation method for jaxon camera calibration
+  * [jsk_calibration] Fix effort and velocity for joint_states which does not have effort and velocity
+    in joint_states_appender.py
+  * [jsk_calibration] Update HRP2JSKNT calibration for multisense
+  * [jsk_calibration] Update README.md
+  * [jsk_calibration] append velocity and effort as well as name and position in joint_states_appender.py
+  * [jsk_calibration] Fix remapping of joint_states for HRP2JSKNTS
+  * [jsk_calibration] Fix documentation to show image
+  * [jsk_calibration] update documentation
+  * [jsk_calibration] Add launch files for hrp2jsknts calibration
+  * [jsk_calibration] Add hrp2jsknts to hrp2-calibration
+  * [jsk_calibration] Add joint_states_appender.py to handle multiple
+    joint_states in calibration time.
+  * Updated to generate motion for hrp2w
+  * use least rpy angle for compatibility?
+  * add initial_poses.yaml for staro, and some update for staro calib
+  * [jsk_calibration] udpate parameters for staro
+  * fix board parmeter
+  * update poses for staro
+  * update generate-staro-files
+  * fix camera joint name
+  * update camera name
+  * [jsk_calibration] Fix robust-motion bug and not use it as default
+  * [jsk_calibration] Do not check collision if IK failed and fix unit of initial_poses.yaml
+  * [jsk_calibration] Fix :write-initial-pose-yaml by Yohei's patch.
+  * [jsk_calibration] Write initial_poses.yaml to speed up optimization
+  * update
+  * [jsk_calibration] Fix typoe of the files
+  * add estimate params
+  * fix chain length
+  * add staro_calibration
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Wed, 10 Jun 2015 15:00:00 -0000
+
+ros-noetic-jsk-calibration (0.1.5-1focal) focal; urgency=high
+
+  * Add utility script to test a lot of calibration parameters
+  * Reduce sampling poses to 30
+  * Sampling pose with configuration space and update sampling space of
+    leg poses
+  * Add legs to calibrate hrp2jsknt
+  * Self Collisoin with small changes on joint angles to get stable position
+  * Add calibration document
+  * Select different poses with probability computation
+  * Select good calibration sample from a lot of mother samples
+  * Use dual arm to calibrate HRP2JSKNT
+  * Filtering not good poses for calibration
+  * Do not use gripper joint on HRP2JSKNT
+  * Add rviz config to see pose_guesses marker
+  * rename make-calibration-pose.l -> calibration.l and separate hrp2
+    specific setting to hrp2-calibration.l
+  * Remove unused file
+  * Update calibration for hrp2jsknt
+  * Add motion files for hrp2jsknt and implement several methods to generate yamls and launches
+  * Generate motion with more strict collision check and add test method on real robot
+  * Update parameters for hrp2jsknt
+  * Add special reset-pose for leg calibration
+  * Remove unused files
+  * Add hrp2jsknt_calibration directory just copied from hironx_calibration
+  * Add board to collision check and refine motion with interpolated angle vectors
+  * Add method to check collision of interpolated motions
+  * Add more depends
+  * add legs motion
+  * Implement hrp2 motion generation
+  * Depends on pr2_msgs and pr2_controllers_msgs
+  * Add jsk_calibration package for hand-eye calibration
+  * Contributors: Ryohei Ueda
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Wed, 07 Jan 2015 15:00:00 -0000
+
+ros-noetic-jsk-calibration (0.1.4-1focal) focal; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Mon, 20 Oct 2014 15:00:00 -0000
+
+ros-noetic-jsk-calibration (0.1.3-1focal) focal; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Thu, 09 Oct 2014 15:00:00 -0000
+
+ros-noetic-jsk-calibration (0.1.2-1focal) focal; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Sun, 07 Sep 2014 15:00:00 -0000
+
+ros-noetic-jsk-calibration (0.1.1-1focal) focal; urgency=high
+
+
+
+ -- Ryohei Ueda <ueda@jsk.t.u-tokyo.ac.jp>  Wed, 03 Sep 2014 15:00:00 -0000
+
+
