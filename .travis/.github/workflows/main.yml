@@ -12,7 +12,7 @@ jobs:
     container: ubuntu:18.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -21,6 +21,7 @@ jobs:
           ADDITIONAL_ENV_TO_DOCKER: 'TEST_VAR1 TEST_VAR2'
           USE_JENKINS: true
           ROS_DISTRO : hydro
+          TIMEOUT_JENKINS: 60
 
   jenkins_indigo:
     name: jenkins_indigo
@@ -28,7 +29,7 @@ jobs:
     container: ubuntu:18.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -37,6 +38,7 @@ jobs:
           ADDITIONAL_ENV_TO_DOCKER: 'TEST_VAR1 TEST_VAR2'
           USE_JENKINS: true
           ROS_DISTRO : indigo
+          TIMEOUT_JENKINS: 60
 
   jenkins_kinetic:
     name: jenkins_kinetic
@@ -44,7 +46,7 @@ jobs:
     container: ubuntu:18.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -53,6 +55,7 @@ jobs:
           ADDITIONAL_ENV_TO_DOCKER: 'TEST_VAR1 TEST_VAR2'
           USE_JENKINS: true
           ROS_DISTRO : kinetic
+          TIMEOUT_JENKINS: 60
 
   jenkins_kinetic_pcl:
     name: jenkins_kinetic_pcl
@@ -60,7 +63,7 @@ jobs:
     container: ubuntu:18.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -70,6 +73,7 @@ jobs:
           USE_JENKINS: true
           ROS_DISTRO : kinetic
           DOCKER_IMAGE_JENKINS : ros-ubuntu:16.04-pcl
+          TIMEOUT_JENKINS: 60
 
   jenkins_melodic:
     name: jenkins_melodic
@@ -77,7 +81,7 @@ jobs:
     container: ubuntu:18.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -86,6 +90,7 @@ jobs:
           ADDITIONAL_ENV_TO_DOCKER: 'TEST_VAR1 TEST_VAR2'
           USE_JENKINS: true
           ROS_DISTRO : melodic
+          TIMEOUT_JENKINS: 60
 
   jenkins_melodic_pcl:
     name: jenkins_melodic_pcl
@@ -93,7 +98,7 @@ jobs:
     container: ubuntu:18.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -103,6 +108,7 @@ jobs:
           USE_JENKINS: true
           ROS_DISTRO : melodic
           DOCKER_IMAGE_JENKINS : ros-ubuntu:18.04-pcl
+          TIMEOUT_JENKINS: 60
 
   jenkins_noetic:
     name: jenkins_noetic
@@ -110,7 +116,7 @@ jobs:
     container: ubuntu:18.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -119,6 +125,7 @@ jobs:
           ADDITIONAL_ENV_TO_DOCKER: 'TEST_VAR1 TEST_VAR2'
           USE_JENKINS: true
           ROS_DISTRO : noetic
+          TIMEOUT_JENKINS: 60
 
   jenkins_noetic_pcl:
     name: jenkins_noetic_pcl
@@ -126,7 +133,7 @@ jobs:
     container: ubuntu:18.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -136,6 +143,7 @@ jobs:
           USE_JENKINS: true
           ROS_DISTRO : noetic
           DOCKER_IMAGE_JENKINS : ros-ubuntu:20.04-pcl
+          TIMEOUT_JENKINS: 60
 
   hydro:
     name: hydro
@@ -158,7 +166,7 @@ jobs:
     container: ubuntu:14.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
            fetch-depth: 2
       - name: Run jsk_travis
@@ -173,7 +181,7 @@ jobs:
     container: ubuntu:16.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -188,7 +196,7 @@ jobs:
     container: ubuntu:18.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -203,7 +211,7 @@ jobs:
     container: ubuntu:18.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -221,7 +229,7 @@ jobs:
     container : ubuntu:18.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -237,7 +245,7 @@ jobs:
     container : ubuntu:18.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -255,7 +263,7 @@ jobs:
     container : ubuntu:18.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Add pr2eus repository to .travis.rosinstall
@@ -280,7 +288,7 @@ jobs:
     container : ubuntu:20.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -295,7 +303,7 @@ jobs:
     container : ubuntu:20.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -314,7 +322,7 @@ jobs:
     container: ubuntu:20.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -332,7 +340,7 @@ jobs:
       - name: Before Checkout # need for actoins/checkout with ros-ubuntu container
         run: sudo chown -R user:jenkins $RUNNER_WORKSPACE $HOME
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
       - name: Run jsk_travis
         uses: ./
         with:
@@ -347,7 +355,7 @@ jobs:
       - name: Before Checkout # need for actoins/checkout with ros-ubuntu container
         run: sudo chown -R user:jenkins $RUNNER_WORKSPACE $HOME
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -361,10 +369,16 @@ jobs:
     runs-on: ubuntu-latest
     container: jskrobotics/ros-ubuntu:20.04
     steps:
-      - name: Before Checkout # need for actoins/checkout with ros-ubuntu container
-        run: sudo chown -R user:jenkins $RUNNER_WORKSPACE $HOME
+      - name: work around permission issue  # https://github.com/actions/checkout/issues/760#issuecomment-1097501613
+        run: |
+          set -x
+          export USER=$(whoami)
+          git config --global --add safe.directory $GITHUB_WORKSPACE || echo "OK" # Show 'could not lock config file /github/home/.gitconfig: Permission denied', but it is ok
+          sudo mkdir -p /__w/
+          sudo chmod 777 -R /__w/
+          sudo chown -R $USER $HOME
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Run jsk_travis
@@ -378,7 +392,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2
       - name: Check python3
